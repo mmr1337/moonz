@@ -506,20 +506,39 @@ class App {
   onTouchDown(e) {
     this.start();
     this.isDown = true;
+    this.dragAxis = null;
     this.scroll.position = this.scroll.current;
-    this.dragStart = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+    this.dragStartX = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+    this.dragStartY = e.clientY ?? e.touches?.[0]?.clientY ?? 0;
   }
   onTouchMove(e) {
     if (!this.isDown) return;
-    this.start();
+
     const x = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
-    const distance = (this.dragStart - x) * (this.scrollSpeed * 0.025);
+    const y = e.clientY ?? e.touches?.[0]?.clientY ?? 0;
+    const dx = x - this.dragStartX;
+    const dy = y - this.dragStartY;
+
+    if (!this.dragAxis && Math.max(Math.abs(dx), Math.abs(dy)) >= 6) {
+      this.dragAxis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+    }
+
+    if (this.dragAxis !== 'x') return;
+
+    this.start();
+    const distance =
+      (this.dragStartX - x) * (this.scrollSpeed * 0.025);
     this.scroll.target = this.scroll.position + distance;
   }
   onTouchUp() {
     this.start();
+
+    if (this.dragAxis === 'x') {
+      this.onCheck();
+    }
+
     this.isDown = false;
-    this.onCheck();
+    this.dragAxis = null;
   }
   onWheel(e) {
     const horizontalIntent =
