@@ -154,10 +154,10 @@ body {
 
 .script-row {
   display: grid;
-  grid-template-columns: 42px minmax(0, 800px) auto;
+  grid-template-columns: 42px minmax(0, 1fr);
   align-items: center;
   gap: 14px;
-  width: min(100%, 1040px);
+  width: min(100%, 1180px);
   min-width: 0;
   margin: 0;
   padding: 4px 0;
@@ -216,40 +216,21 @@ body {
   font-weight: 600;
 }
 
-.script-row__trailing {
+.script-row__code-line {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 12px;
-  min-width: 184px;
-}
-
-.script-row__status {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  width: 56px;
-  min-width: 56px;
-  color: #22c55e;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1;
-  text-align: right;
-  opacity: 0;
-  transform: translateY(2px);
-  transition:
-    opacity 160ms ease,
-    transform 160ms ease;
-}
-
-.script-row__status.is-visible {
-  opacity: 1;
-  transform: translateY(0);
+  gap: 18px;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .lua-code {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: min(860px, calc(100vw - 420px));
+  flex: 0 1 auto;
   margin: 0;
   color: #a7adba;
   font-family:
@@ -345,7 +326,7 @@ body {
   }
 
   .script-row {
-    grid-template-columns: 38px minmax(0, 1fr) auto;
+    grid-template-columns: 38px minmax(0, 1fr);
     width: 100%;
     gap: 12px;
   }
@@ -355,9 +336,12 @@ body {
     min-width: 38px;
   }
 
-  .script-row__trailing {
-    min-width: 174px;
-    gap: 10px;
+  .script-row__code-line {
+    gap: 14px;
+  }
+
+  .lua-code {
+    max-width: calc(100vw - 250px);
   }
 
   .script-row__image-frame {
@@ -391,7 +375,7 @@ body {
   }
 
   .script-row {
-    grid-template-columns: 34px minmax(0, 1fr) auto;
+    grid-template-columns: 34px minmax(0, 1fr);
     gap: 9px;
   }
 
@@ -400,15 +384,12 @@ body {
     min-width: 34px;
   }
 
-  .script-row__trailing {
-    min-width: 154px;
-    gap: 8px;
+  .script-row__code-line {
+    gap: 10px;
   }
 
-  .script-row__status {
-    width: 50px;
-    min-width: 50px;
-    font-size: 11px;
+  .lua-code {
+    max-width: calc(100vw - 160px);
   }
 
   .script-row__image-frame {
