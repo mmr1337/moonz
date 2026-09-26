@@ -11,7 +11,20 @@ body {
 
 html {
   scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+html.is-section-animating {
+  scroll-snap-type: none;
 }
 
 body {
@@ -19,6 +32,7 @@ body {
   min-height: 100svh;
   background: #07090d;
   overflow-x: hidden;
+  scrollbar-width: none;
 }
 
 .page-shell {
@@ -88,5 +102,11 @@ body {
 @media (max-width: 700px) {
   .top-section {
     padding: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-snap-type: y mandatory;
   }
 }
