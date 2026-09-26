@@ -26,7 +26,6 @@ body {
   height: clamp(300px, 54vw, 520px);
   overflow: hidden;
   border-radius: 28px;
-  background: #0b0d13;
 }
 
 @media (max-width: 640px) {
