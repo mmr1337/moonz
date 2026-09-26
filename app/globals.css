@@ -136,7 +136,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: min(1500px, calc(100vw - 96px));
+  width: min(1280px, calc(100vw - 96px));
   height: 100%;
   margin: 0 auto;
   padding: clamp(118px, 12vh, 154px) 0 clamp(42px, 6vh, 72px);
@@ -146,17 +146,18 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: flex-start;
   gap: clamp(10px, 1.25vh, 16px);
-  width: 100%;
+  width: min(1080px, 100%);
   min-width: 0;
 }
 
 .script-row {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) 74px;
+  grid-template-columns: 42px minmax(0, 850px) 62px;
   align-items: center;
-  gap: clamp(14px, 1.5vw, 24px);
-  width: 100%;
+  gap: 14px;
+  width: min(100%, 980px);
   min-width: 0;
   margin: 0;
   padding: 4px 0;
@@ -179,7 +180,7 @@ body {
 
 .script-row:focus-visible {
   outline: 1px solid rgba(121, 121, 255, 0.62);
-  outline-offset: 8px;
+  outline-offset: 7px;
   border-radius: 10px;
 }
 
@@ -204,7 +205,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   min-height: 18px;
   margin-bottom: 4px;
 }
@@ -235,7 +236,7 @@ body {
   display: block;
   width: 100%;
   margin: 0;
-  color: #d7d9e0;
+  color: #a7adba;
   font-family:
     ui-monospace,
     SFMono-Regular,
@@ -244,46 +245,54 @@ body {
     Consolas,
     'Liberation Mono',
     monospace;
-  font-size: clamp(10px, 0.72vw, 12.5px);
-  line-height: 1.5;
+  font-size: clamp(10.5px, 0.72vw, 12.5px);
+  line-height: 1.55;
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
-  transition: color 160ms ease;
+  opacity: 0.72;
+  transition:
+    opacity 160ms ease,
+    filter 160ms ease;
 }
 
-.lua-code--plain {
-  color: #8f94a0;
+.lua-code.is-selected {
+  opacity: 1;
+  filter: saturate(1.12);
 }
 
 .lua-fn {
-  color: #c084fc;
+  color: #7dd3fc;
 }
 
 .lua-global {
-  color: #60a5fa;
+  color: #93c5fd;
+}
+
+.lua-operator {
+  color: #f8fafc;
 }
 
 .lua-method {
-  color: #38bdf8;
+  color: #67e8f9;
 }
 
 .lua-string {
-  color: #86efac;
+  color: #f0a57a;
 }
 
-.lua-punc {
-  color: #e5e7eb;
+.lua-paren {
+  color: #facc15;
 }
 
 .script-row__image-frame {
   position: relative;
   display: grid;
   place-items: center;
-  width: 66px;
-  height: 66px;
+  width: 58px;
+  height: 58px;
   padding: 3px;
-  border: 2px solid rgba(255, 255, 255, 0.14);
+  border: 2px solid rgba(255, 255, 255, 0.16);
   border-radius: 50%;
   background: transparent;
   overflow: hidden;
@@ -297,7 +306,7 @@ body {
   border-color: #7979ff;
   box-shadow:
     0 0 0 3px rgba(121, 121, 255, 0.1),
-    0 0 22px rgba(121, 121, 255, 0.18);
+    0 0 18px rgba(121, 121, 255, 0.22);
   transform: scale(1.04);
 }
 
@@ -316,9 +325,14 @@ body {
     padding-top: 118px;
   }
 
+  .scripts-list {
+    width: 100%;
+  }
+
   .script-row {
-    grid-template-columns: 38px minmax(0, 1fr) 64px;
-    gap: 14px;
+    grid-template-columns: 38px minmax(0, 1fr) 58px;
+    width: 100%;
+    gap: 12px;
   }
 
   .script-row__loader {
@@ -327,8 +341,8 @@ body {
   }
 
   .script-row__image-frame {
-    width: 58px;
-    height: 58px;
+    width: 54px;
+    height: 54px;
   }
 }
 
@@ -357,8 +371,8 @@ body {
   }
 
   .script-row {
-    grid-template-columns: 34px minmax(0, 1fr) 54px;
-    gap: 10px;
+    grid-template-columns: 34px minmax(0, 1fr) 50px;
+    gap: 9px;
   }
 
   .script-row__loader {
@@ -367,8 +381,8 @@ body {
   }
 
   .script-row__image-frame {
-    width: 50px;
-    height: 50px;
+    width: 48px;
+    height: 48px;
     padding: 2px;
   }
 
