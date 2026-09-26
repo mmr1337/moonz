@@ -5,6 +5,7 @@ import ElasticMesh from '../components/ElasticMesh/ElasticMesh';
 import Ferrofluid from '../components/Ferrofluid/Ferrofluid';
 import CircularGallery from '../components/CircularGallery/CircularGallery';
 import HeroBrand from '../components/HeroBrand/HeroBrand';
+import BranchedMenu from '../components/BranchedMenu/BranchedMenu';
 
 const previewImage = '/preview.png';
 
@@ -17,9 +18,24 @@ const galleryItems = [
   { image: '/gallery/violence-district.png', text: 'Violence District' }
 ];
 
+const scriptMenuItems = [
+  {
+    label: 'Scripts',
+    children: [
+      { value: 'death-ball', label: 'Death Ball' },
+      { value: 'retro-tower-defense', label: 'Retro Tower Defense' },
+      { value: 'silly-defense', label: 'Silly Defense' },
+      { value: 'slayers-2', label: 'Slayers 2' },
+      { value: 'tower-defense-x', label: 'Tower Defense X' },
+      { value: 'violence-district', label: 'Violence District' }
+    ]
+  }
+];
+
 export default function HomePage() {
   const topRef = useRef(null);
   const galleryRef = useRef(null);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     let animating = false;
@@ -27,7 +43,11 @@ export default function HomePage() {
     let scrollEndHandler = null;
 
     const getSections = () =>
-      [topRef.current, galleryRef.current].filter(Boolean);
+      [
+        topRef.current,
+        galleryRef.current,
+        menuRef.current
+      ].filter(Boolean);
 
     const finishTransition = () => {
       if (!animating) return;
@@ -73,12 +93,21 @@ export default function HomePage() {
     };
 
     const getCurrentIndex = sections => {
-      const viewport = window.innerHeight || 1;
-      return Math.abs(
-        sections[1].getBoundingClientRect().top
-      ) < viewport * 0.5
-        ? 1
-        : 0;
+      let closestIndex = 0;
+      let closestDistance = Infinity;
+
+      sections.forEach((section, index) => {
+        const distance = Math.abs(
+          section.getBoundingClientRect().top
+        );
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestIndex = index;
+        }
+      });
+
+      return closestIndex;
     };
 
     const onWheel = event => {
@@ -88,7 +117,7 @@ export default function HomePage() {
       if (!verticalIntent || Math.abs(event.deltaY) < 3) return;
 
       const sections = getSections();
-      if (sections.length !== 2) return;
+      if (sections.length !== 3) return;
 
       if (animating) {
         event.preventDefault();
@@ -98,7 +127,7 @@ export default function HomePage() {
       const currentIndex = getCurrentIndex(sections);
       const nextIndex =
         event.deltaY > 0
-          ? Math.min(1, currentIndex + 1)
+          ? Math.min(sections.length - 1, currentIndex + 1)
           : Math.max(0, currentIndex - 1);
 
       if (nextIndex === currentIndex) return;
@@ -111,7 +140,7 @@ export default function HomePage() {
       if (!['PageDown', 'PageUp'].includes(event.key)) return;
 
       const sections = getSections();
-      if (sections.length !== 2) return;
+      if (sections.length !== 3) return;
 
       if (animating) {
         event.preventDefault();
@@ -121,7 +150,7 @@ export default function HomePage() {
       const currentIndex = getCurrentIndex(sections);
       const nextIndex =
         event.key === 'PageDown'
-          ? Math.min(1, currentIndex + 1)
+          ? Math.min(sections.length - 1, currentIndex + 1)
           : Math.max(0, currentIndex - 1);
 
       if (nextIndex === currentIndex) return;
@@ -194,7 +223,30 @@ export default function HomePage() {
           scrollEase={0.08}
           textColor="#b9bdc7"
           font="600 20px Arial"
+          interactive={false}
         />
+      </section>
+
+      <section ref={menuRef} className="menu-section">
+        <div className="menu-shell">
+          <BranchedMenu
+            items={scriptMenuItems}
+            defaultOpen={0}
+            defaultActive="death-ball"
+            color="#ffffff"
+            accentColor="#7979ff"
+            lineColor="#7979ff"
+            width={240}
+            rowHeight={32}
+            indent={40}
+            trunk={14}
+            radius={10}
+            lineWidth={1.5}
+            fontSize={14}
+            drawDuration={400}
+            foldDuration={300}
+          />
+        </div>
       </section>
     </main>
   );
