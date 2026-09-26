@@ -415,6 +415,7 @@ class App {
     this.running = false;
     this.resizeRaf = 0;
     this.lastTime = performance.now();
+    this.boundUpdate = this.update.bind(this);
     this.addEventListeners();
     this.start();
   }
@@ -485,12 +486,12 @@ class App {
   onTouchDown(e) {
     this.isDown = true;
     this.scroll.position = this.scroll.current;
-    this.start = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+    this.dragStart = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
   }
   onTouchMove(e) {
     if (!this.isDown) return;
     const x = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
-    const distance = (this.start - x) * (this.scrollSpeed * 0.025);
+    const distance = (this.dragStart - x) * (this.scrollSpeed * 0.025);
     this.scroll.target = this.scroll.position + distance;
   }
   onTouchUp() {
@@ -585,7 +586,7 @@ class App {
 
     this.renderer.render({ scene: this.scene, camera: this.camera });
     this.scroll.last = this.scroll.current;
-    this.raf = window.requestAnimationFrame(this.update);
+    this.raf = window.requestAnimationFrame(this.boundUpdate);
   }
 
   start() {
