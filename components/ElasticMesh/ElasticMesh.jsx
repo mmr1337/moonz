@@ -758,11 +758,11 @@ const ElasticMesh = ({
 
     const io = new IntersectionObserver(
       entries => {
-        inView = entries[0]?.isIntersecting ?? true;
+        inView = (entries[0]?.intersectionRatio || 0) >= 0.35;
         if (inView) start();
         else stop();
       },
-      { rootMargin: '120px' }
+      { threshold: [0, 0.35] }
     );
     io.observe(container);
 
