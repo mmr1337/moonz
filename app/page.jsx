@@ -19,81 +19,80 @@ const galleryItems = [
   { image: '/gallery/violence-district.png', text: 'Violence District' }
 ];
 
-const scripts = {
-  'death-ball': {
+const scripts = [
+  {
+    key: 'death-ball',
     label: 'Death Ball',
+    image: '/gallery/death-ball.png',
     code: 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/c12d7a4a94f0d10c27f21ff462e781d5.lua"))()'
   },
-  'slayers-2': {
-    label: 'Slayer 2',
-    code: 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/15d48ff2a0df2a1e43a7e0a717bae92a.lua"))()'
+  {
+    key: 'retro-tower-defense',
+    label: 'Retro Tower Defense',
+    image: '/gallery/retro-tower-defense.png',
+    code: 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/3c8cbc7e049bf4f49bac804b6d20b337.lua"))()'
   },
-  'violence-district': {
-    label: 'Violence District',
-    code: 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/b64eaf788b0c15c54c17ee96a133bc7a.lua"))()'
-  },
-  'tower-defense-x': {
-    label: 'Tower Defense X',
-    code: 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/5ca685865a7af9226b5e9fef98ae47a7.lua"))()'
-  },
-  'silly-defense': {
+  {
+    key: 'silly-defense',
     label: 'Silly Defense',
+    image: '/gallery/silly-defense.png',
     code: 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/2c7eb16a08c32a940d6df4fedceae130.lua"))()'
   },
-  'retro-tower-defense': {
-    label: 'Retro Tower Defense',
-    code: 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/3c8cbc7e049bf4f49bac804b6d20b337.lua"))()'
+  {
+    key: 'slayers-2',
+    label: 'Slayers 2',
+    image: '/gallery/slayers-2.png',
+    code: 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/15d48ff2a0df2a1e43a7e0a717bae92a.lua"))()'
+  },
+  {
+    key: 'tower-defense-x',
+    label: 'Tower Defense X',
+    image: '/gallery/tower-defense-x.png',
+    code: 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/5ca685865a7af9226b5e9fef98ae47a7.lua"))()'
+  },
+  {
+    key: 'violence-district',
+    label: 'Violence District',
+    image: '/gallery/violence-district.png',
+    code: 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/b64eaf788b0c15c54c17ee96a133bc7a.lua"))()'
   }
-};
-
-const scriptImageMap = {
-  'death-ball': '/gallery/death-ball.png',
-  'retro-tower-defense': '/gallery/retro-tower-defense.png',
-  'silly-defense': '/gallery/silly-defense.png',
-  'slayers-2': '/gallery/slayers-2.png',
-  'tower-defense-x': '/gallery/tower-defense-x.png',
-  'violence-district': '/gallery/violence-district.png'
-};
-
-const scriptEntries = Object.entries(scripts);
+];
 
 const scriptMenuItems = [
   {
     label: 'Scripts',
-    children: [
-      { value: 'death-ball', label: 'Death Ball' },
-      { value: 'retro-tower-defense', label: 'Retro Tower Defense' },
-      { value: 'silly-defense', label: 'Silly Defense' },
-      { value: 'slayers-2', label: 'Slayers 2' },
-      { value: 'tower-defense-x', label: 'Tower Defense X' },
-      { value: 'violence-district', label: 'Violence District' }
-    ]
+    children: scripts.map(item => ({
+      value: item.key,
+      label: item.label
+    }))
   }
 ];
 
-function LuaCode({ code, highlighted }) {
-  if (!highlighted) {
-    return <code className="lua-code lua-code--plain">{code}</code>;
-  }
-
-  const match = code.match(/^loadstring\\(game:HttpGet\\("(.+)"\\)\\)\\(\\)$/);
+function LuaCode({ code, selected }) {
+  const match = code.match(
+    /^loadstring\(game:HttpGet\("([^"]+)"\)\)\(\)$/
+  );
 
   if (!match) {
-    return <code className="lua-code">{code}</code>;
+    return (
+      <code className={`lua-code${selected ? ' is-selected' : ''}`}>
+        {code}
+      </code>
+    );
   }
 
   const url = match[1];
 
   return (
-    <code className="lua-code">
+    <code className={`lua-code${selected ? ' is-selected' : ''}`}>
       <span className="lua-fn">loadstring</span>
-      <span className="lua-punc">(</span>
+      <span className="lua-paren">(</span>
       <span className="lua-global">game</span>
-      <span className="lua-punc">:</span>
+      <span className="lua-operator">:</span>
       <span className="lua-method">HttpGet</span>
-      <span className="lua-punc">(</span>
+      <span className="lua-paren">(</span>
       <span className="lua-string">"{url}"</span>
-      <span className="lua-punc">))()</span>
+      <span className="lua-paren">))()</span>
     </code>
   );
 }
@@ -106,8 +105,6 @@ export default function HomePage() {
 
   const [selectedScript, setSelectedScript] = useState('death-ball');
   const [copiedScript, setCopiedScript] = useState('');
-
-  const selected = scripts[selectedScript];
 
   const selectScript = value => {
     setSelectedScript(value);
@@ -366,18 +363,18 @@ export default function HomePage() {
 
         <div className="scripts-layout">
           <div className="scripts-list">
-            {scriptEntries.map(([key, item]) => {
-              const isSelected = key === selectedScript;
-              const isCopied = key === copiedScript;
+            {scripts.map(item => {
+              const isSelected = item.key === selectedScript;
+              const isCopied = item.key === copiedScript;
 
               return (
                 <button
-                  key={key}
+                  key={item.key}
                   type="button"
                   className={`script-row${isSelected ? ' is-selected' : ''}${
                     isCopied ? ' is-copied' : ''
                   }`}
-                  onClick={() => copyScript(key, item.code)}
+                  onClick={() => copyScript(item.key, item.code)}
                   aria-label={`Copy ${item.label} loadstring`}
                 >
                   <span className="script-row__loader" aria-hidden="true">
@@ -415,7 +412,7 @@ export default function HomePage() {
                       </span>
                     </span>
 
-                    <LuaCode code={item.code} highlighted={isSelected} />
+                    <LuaCode code={item.code} selected={isSelected} />
                   </span>
 
                   <span
@@ -425,7 +422,7 @@ export default function HomePage() {
                     aria-hidden="true"
                   >
                     <img
-                      src={scriptImageMap[key]}
+                      src={item.image}
                       alt=""
                       className="script-row__image"
                       draggable="false"
