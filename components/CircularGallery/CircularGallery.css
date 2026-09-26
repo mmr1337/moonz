@@ -38,3 +38,10 @@
 .circular-gallery--static:focus-visible {
   outline: none;
 }
+
+@media (max-width: 760px) {
+  .circular-gallery {
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+  }
+}
