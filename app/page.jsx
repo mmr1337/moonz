@@ -287,15 +287,22 @@ export default function HomePage() {
 
       const currentIndex = getCurrentIndex(sections);
 
-      // Only take over vertical touch gestures on the WebGL gallery screen.
-      // Horizontal gestures continue to control CircularGallery.
-      if (currentIndex !== 1) return;
+      let nextIndex = currentIndex;
 
-      const nextIndex = dy < 0 ? 2 : 0;
+      if (currentIndex === 1) {
+        // Gallery: horizontal gestures remain gallery drag.
+        // Vertical swipe moves between sections.
+        nextIndex = dy < 0 ? 2 : 0;
+      } else if (currentIndex === 2 && dy > 0) {
+        // Third screen: downward finger movement returns to gallery.
+        nextIndex = 1;
+      } else {
+        return;
+      }
 
       event.preventDefault();
 
-      if (animating) return;
+      if (animating || nextIndex === currentIndex) return;
 
       touchHandled = true;
       moveTo(sections[nextIndex]);
