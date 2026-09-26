@@ -276,11 +276,11 @@ export default function Ferrofluid({
 
     const io = new IntersectionObserver(
       entries => {
-        inView = entries[0]?.isIntersecting ?? true;
+        inView = (entries[0]?.intersectionRatio || 0) > 0.08;
         if (inView) start();
         else stop();
       },
-      { threshold: 0 }
+      { threshold: [0, 0.08] }
     );
     io.observe(container);
 
