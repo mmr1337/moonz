@@ -5,12 +5,12 @@ import CircularGallery from '../components/CircularGallery/CircularGallery';
 const previewImage = '/preview.png';
 
 const galleryItems = [
-  { image: '/gallery/death-ball.png', text: '' },
-  { image: '/gallery/retro-tower-defense.png', text: '' },
-  { image: '/gallery/silly-defense.png', text: '' },
-  { image: '/gallery/slayers-2.png', text: '' },
-  { image: '/gallery/tower-defense-x.png', text: '' },
-  { image: '/gallery/violence-district.png', text: '' }
+  { image: '/gallery/death-ball.png', text: 'Death Ball' },
+  { image: '/gallery/retro-tower-defense.png', text: 'Retro Tower Defense' },
+  { image: '/gallery/silly-defense.png', text: 'Silly Defense' },
+  { image: '/gallery/slayers-2.png', text: 'Slayers 2' },
+  { image: '/gallery/tower-defense-x.png', text: 'Tower Defense X' },
+  { image: '/gallery/violence-district.png', text: 'Violence District' }
 ];
 
 export default function HomePage() {
@@ -53,7 +53,8 @@ export default function HomePage() {
           borderRadius={0.055}
           scrollSpeed={1}
           scrollEase={0.08}
-          font="bold 1px sans-serif"
+          textColor="#b9bdc7"
+          font="600 20px Arial"
         />
       </section>
     </main>

@@ -187,7 +187,7 @@ class Title {
     });
     this.mesh = new Mesh(this.gl, { geometry, program });
     const aspect = width / height;
-    const textHeight = this.plane.scale.y * 0.15;
+    const textHeight = this.plane.scale.y * 0.09;
     const textWidth = textHeight * aspect;
     this.mesh.scale.set(textWidth, textHeight, 1);
     this.mesh.position.y = -this.plane.scale.y * 0.5 - textHeight * 0.5 - 0.05;
@@ -631,11 +631,11 @@ class App {
 
     this.intersectionObserver = new IntersectionObserver(
       entries => {
-        this.visible = (entries[0]?.intersectionRatio || 0) > 0.05;
+        this.visible = entries[0]?.isIntersecting ?? true;
         if (this.visible) this.start();
         else this.stop();
       },
-      { threshold: [0, 0.05] }
+      { threshold: 0 }
     );
     this.intersectionObserver.observe(this.container);
   }
