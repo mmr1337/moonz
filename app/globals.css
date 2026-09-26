@@ -113,65 +113,72 @@ body {
 }
 
 .menu-section {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  padding: clamp(24px, 3vw, 48px);
+  position: relative;
   background: #07090d;
   contain: layout paint size;
   overflow: hidden;
 }
 
 .menu-shell {
-  width: min(900px, calc(100vw - 48px));
-  min-height: 280px;
+  position: absolute;
+  top: clamp(24px, 3vw, 48px);
+  right: clamp(24px, 3vw, 48px);
+  z-index: 2;
+  width: min(320px, calc(100vw - 48px));
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: flex-start;
-  gap: 24px;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.menu-loader-center {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: clamp(24px, 4vw, 64px);
+  pointer-events: none;
 }
 
 .script-loader-button {
-  width: min(820px, 100%);
+  width: min(1180px, calc(100vw - 120px));
   margin: 0;
-  padding: 14px 16px;
-  border: 1px solid rgba(121, 121, 255, 0.18);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.025);
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: #ffffff;
   text-align: left;
   cursor: pointer;
   font: inherit;
   outline: none;
-  transition:
-    border-color 180ms ease,
-    background-color 180ms ease;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.script-loader-button:hover {
-  border-color: rgba(121, 121, 255, 0.38);
-  background: rgba(121, 121, 255, 0.04);
+.script-loader-button:hover,
+.script-loader-button:active {
+  background: transparent;
 }
 
 .script-loader-button:focus-visible {
-  border-color: #7979ff;
-  box-shadow: 0 0 0 2px rgba(121, 121, 255, 0.16);
+  outline: 1px solid rgba(121, 121, 255, 0.65);
+  outline-offset: 10px;
+  border-radius: 8px;
 }
 
 @media (max-width: 700px) {
-  .menu-section {
-    padding: 18px;
+  .menu-shell {
+    top: 18px;
+    right: 18px;
+    width: min(280px, calc(100vw - 36px));
   }
 
-  .menu-shell {
-    width: 100%;
-    gap: 18px;
+  .menu-loader-center {
+    padding: 24px 16px;
   }
 
   .script-loader-button {
     width: 100%;
-    padding: 12px;
   }
 }
 
