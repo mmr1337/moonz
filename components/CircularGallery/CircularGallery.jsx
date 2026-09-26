@@ -126,7 +126,13 @@ function getFontSize(font) {
   return match ? parseInt(match[1], 10) : 30;
 }
 
+const textTextureCache = new Map();
+
 function createTextTexture(gl, text, font = 'bold 30px monospace', color = 'black') {
+  const cacheKey = `${text}::${font}::${color}`;
+  const cached = textTextureCache.get(cacheKey);
+  if (cached) return cached;
+
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
   context.font = font;
@@ -143,7 +149,9 @@ function createTextTexture(gl, text, font = 'bold 30px monospace', color = 'blac
   context.fillText(text, canvas.width / 2, canvas.height / 2);
   const texture = new Texture(gl, { generateMipmaps: false });
   texture.image = canvas;
-  return { texture, width: canvas.width, height: canvas.height };
+  const result = { texture, width: canvas.width, height: canvas.height };
+  textTextureCache.set(cacheKey, result);
+  return result;
 }
 
 class Title {
@@ -403,6 +411,7 @@ class App {
     this.container = container;
     this.scrollSpeed = scrollSpeed;
     this.scroll = { ease: scrollEase, current: 0, target: 0, last: 0 };
+    this.idleFrames = 0;
     this.onCheckDebounce = debounce(this.onCheck, 200);
     this.createRenderer();
     this.createCamera();
@@ -484,26 +493,36 @@ class App {
     });
   }
   onTouchDown(e) {
+    this.start();
+    this.idleFrames = 0;
     this.isDown = true;
     this.scroll.position = this.scroll.current;
     this.dragStart = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
   }
   onTouchMove(e) {
     if (!this.isDown) return;
+    this.start();
+    this.idleFrames = 0;
     const x = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
     const distance = (this.dragStart - x) * (this.scrollSpeed * 0.025);
     this.scroll.target = this.scroll.position + distance;
   }
   onTouchUp() {
+    this.start();
+    this.idleFrames = 0;
     this.isDown = false;
     this.onCheck();
   }
   onWheel(e) {
+    this.start();
+    this.idleFrames = 0;
     const delta = e.deltaY || e.wheelDelta || e.detail;
     this.scroll.target += (delta > 0 ? this.scrollSpeed : -this.scrollSpeed) * 0.2;
     this.onCheckDebounce();
   }
   onKeyDown(e) {
+    this.start();
+    this.idleFrames = 0;
     switch (e.key) {
       case 'ArrowRight':
         e.preventDefault();
@@ -585,7 +604,23 @@ class App {
     }
 
     this.renderer.render({ scene: this.scene, camera: this.camera });
+
+    const frameDelta = this.scroll.current - this.scroll.last;
+    const idle =
+      !this.isDown &&
+      Math.abs(this.scroll.target - this.scroll.current) < 0.0005 &&
+      Math.abs(frameDelta) < 0.0005;
+
     this.scroll.last = this.scroll.current;
+
+    this.idleFrames = idle ? this.idleFrames + 1 : 0;
+
+    if (this.idleFrames > 12) {
+      this.running = false;
+      this.raf = 0;
+      return;
+    }
+
     this.raf = window.requestAnimationFrame(this.boundUpdate);
   }
 
@@ -631,11 +666,11 @@ class App {
 
     this.intersectionObserver = new IntersectionObserver(
       entries => {
-        this.visible = entries[0]?.isIntersecting ?? true;
+        this.visible = (entries[0]?.intersectionRatio || 0) >= 0.9;
         if (this.visible) this.start();
         else this.stop();
       },
-      { threshold: 0 }
+      { threshold: [0, 0.9] }
     );
     this.intersectionObserver.observe(this.container);
   }
