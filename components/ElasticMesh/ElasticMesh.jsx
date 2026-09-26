@@ -77,21 +77,28 @@ void main() {
     base = mix(uColor1, uColor2, clamp(vUv.y, 0.0, 1.0));
   }
 
-  vec3 N = normalize(vNormal);
-  vec3 L = normalize(vec3(-0.35, 0.55, 0.78));
-  vec3 V = vec3(0.0, 0.0, 1.0);
-  vec3 H = normalize(L + V);
+  vec3 lit = base;
+  float diff = 1.0;
 
-  float diff = clamp(dot(N, L), 0.0, 1.0);
-  float specRaw = pow(clamp(dot(N, H), 0.0, 1.0), 26.0);
-  float specFlat = pow(clamp(H.z, 0.0, 1.0), 26.0);
-  float spec = clamp((specRaw - specFlat) / (1.0 - specFlat), 0.0, 1.0);
-  float ao = clamp(1.0 + vDepth * 0.45, 0.65, 1.25);
+  if (uShading > 0.0001 || uGrid > 0.5) {
+    vec3 N = normalize(vNormal);
+    vec3 L = normalize(vec3(-0.35, 0.55, 0.78));
+    diff = clamp(dot(N, L), 0.0, 1.0);
 
-  vec3 lit = base * (1.0 - uShading * 0.28);
-  lit += base * diff * uShading * 0.55;
-  lit *= ao;
-  lit += uHighlight * spec * uShading * 0.25;
+    if (uShading > 0.0001) {
+      vec3 V = vec3(0.0, 0.0, 1.0);
+      vec3 H = normalize(L + V);
+      float specRaw = pow(clamp(dot(N, H), 0.0, 1.0), 26.0);
+      float specFlat = pow(clamp(H.z, 0.0, 1.0), 26.0);
+      float spec = clamp((specRaw - specFlat) / (1.0 - specFlat), 0.0, 1.0);
+      float ao = clamp(1.0 + vDepth * 0.45, 0.65, 1.25);
+
+      lit = base * (1.0 - uShading * 0.28);
+      lit += base * diff * uShading * 0.55;
+      lit *= ao;
+      lit += uHighlight * spec * uShading * 0.25;
+    }
+  }
 
   if (uGrid > 0.5) {
     vec2 g = vUv * uGridDensity;
@@ -150,6 +157,7 @@ const ElasticMesh = ({
   ...rest
 }) => {
   const containerRef = useRef(null);
+  const wakeRef = useRef(() => {});
 
   const propsRef = useRef({});
   propsRef.current = {
@@ -173,22 +181,39 @@ const ElasticMesh = ({
   };
 
   useEffect(() => {
+    wakeRef.current();
+  }, [
+    color1,
+    color2,
+    highlight,
+    showGrid,
+    gridDensity,
+    gridOpacity,
+    gridColor,
+    borderRadius,
+    stiffness,
+    damping,
+    grabRadius,
+    pull,
+    wobble,
+    tilt,
+    shading,
+    interaction,
+    enabled
+  ]);
+
+  useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    const deviceDpr = window.devicePixelRatio || 1;
-    const minDpr = Math.min(deviceDpr, 2);
-    const maxDpr = Math.min(deviceDpr, 3);
-    let renderDpr = maxDpr;
 
     const renderer = new Renderer({
       alpha: true,
       antialias: true,
       depth: false,
       stencil: false,
-      dpr: renderDpr,
+      dpr: Math.min(window.devicePixelRatio || 1, 3),
       powerPreference: 'high-performance'
     });
     const gl = renderer.gl;
@@ -235,6 +260,18 @@ const ElasticMesh = ({
       }
     }
 
+    const neighbors = new Uint16Array(nodeCount * 4);
+    for (let j = 0; j < N; j++) {
+      for (let i = 0; i < N; i++) {
+        const idx = j * N + i;
+        const n4 = idx * 4;
+        neighbors[n4] = i > 0 ? idx - 1 : idx;
+        neighbors[n4 + 1] = i < N - 1 ? idx + 1 : idx;
+        neighbors[n4 + 2] = j > 0 ? idx - N : idx;
+        neighbors[n4 + 3] = j < N - 1 ? idx + N : idx;
+      }
+    }
+
     const geometry = new Geometry(gl, {
       aGrid: { size: 2, data: aGrid },
       uv: { size: 2, data: uv },
@@ -254,6 +291,7 @@ const ElasticMesh = ({
       img.onload = () => {
         texture.image = img;
         program.uniforms.uHasImage.value = 1;
+        wakeRef.current();
       };
     }
 
@@ -313,6 +351,7 @@ const ElasticMesh = ({
       program.uniforms.uAspect.value = aspect;
       program.uniforms.uRes.value = [viewWidth, viewHeight];
       refreshBase();
+      refreshPointerRect();
     }
 
     const ro = new ResizeObserver(() => resize());
@@ -320,9 +359,17 @@ const ElasticMesh = ({
     resize(true);
 
     const pointer = { x: 0, y: 0, tx: 0, ty: 0, active: false, targetActive: false };
+    let pointerRect = container.getBoundingClientRect();
+    let rectDirty = false;
+
+    function refreshPointerRect() {
+      pointerRect = container.getBoundingClientRect();
+      rectDirty = false;
+    }
 
     function toPlane(clientX, clientY) {
-      const rect = container.getBoundingClientRect();
+      if (rectDirty) refreshPointerRect();
+      const rect = pointerRect;
       const mx = (clientX - rect.left) / rect.width;
       const my = (clientY - rect.top) / rect.height;
       const clipX = mx * 2 - 1;
@@ -337,49 +384,62 @@ const ElasticMesh = ({
       pointer.ty = py;
     }
 
-    function onMove(e) {
+    function onPointerMove(e) {
       toPlane(e.clientX, e.clientY);
       if (propsRef.current.interaction === 'hover') pointer.targetActive = true;
+      wakeRef.current();
     }
-    function onEnter() {
+
+    function onPointerEnter() {
+      refreshPointerRect();
       if (propsRef.current.interaction === 'hover') pointer.targetActive = true;
+      wakeRef.current();
     }
-    function onLeave() {
+
+    function onPointerLeave() {
       pointer.targetActive = false;
+      wakeRef.current();
     }
-    function onDown(e) {
+
+    function onPointerDown(e) {
       if (propsRef.current.interaction === 'drag') {
+        refreshPointerRect();
         toPlane(e.clientX, e.clientY);
         pointer.x = pointer.tx;
         pointer.y = pointer.ty;
         pointer.targetActive = true;
-      }
-    }
-    function onUp() {
-      if (propsRef.current.interaction === 'drag') pointer.targetActive = false;
-    }
-    function onTouch(e) {
-      if (e.touches.length) {
-        toPlane(e.touches[0].clientX, e.touches[0].clientY);
-        pointer.targetActive = true;
+        if (container.setPointerCapture) container.setPointerCapture(e.pointerId);
+        wakeRef.current();
       }
     }
 
-    container.addEventListener('mousemove', onMove);
-    container.addEventListener('mouseenter', onEnter);
-    container.addEventListener('mouseleave', onLeave);
-    container.addEventListener('mousedown', onDown);
-    window.addEventListener('mouseup', onUp);
-    container.addEventListener('touchstart', onTouch, { passive: true });
-    container.addEventListener('touchmove', onTouch, { passive: true });
-    container.addEventListener('touchend', onLeave);
+    function onPointerUp(e) {
+      if (propsRef.current.interaction === 'drag') {
+        pointer.targetActive = false;
+        if (container.releasePointerCapture && container.hasPointerCapture?.(e.pointerId)) {
+          container.releasePointerCapture(e.pointerId);
+        }
+        wakeRef.current();
+      }
+    }
+
+    const onScroll = () => {
+      rectDirty = true;
+    };
+
+    container.addEventListener('pointermove', onPointerMove, { passive: true });
+    container.addEventListener('pointerenter', onPointerEnter, { passive: true });
+    container.addEventListener('pointerleave', onPointerLeave, { passive: true });
+    container.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointerup', onPointerUp, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
 
     const STEP = 1 / 120;
     const MAX_SUB = 5;
     let accTime = 0;
     let last = performance.now();
-    let frameTimeSum = 0;
-    let frameSamples = 0;
+    let sleepFrames = 0;
+    let motionScore = 0;
 
     function substep() {
       const p = propsRef.current;
@@ -403,51 +463,34 @@ const ElasticMesh = ({
           let ay = -s * oy;
           let az = -s * oz;
 
-          let sumx = 0;
-          let sumy = 0;
-          let sumz = 0;
-          let cnt = 0;
-          if (i > 0) {
-            const n = (idx - 1) * 3;
-            sumx += pos[n];
-            sumy += pos[n + 1];
-            sumz += pos[n + 2];
-            cnt++;
-          }
-          if (i < N - 1) {
-            const n = (idx + 1) * 3;
-            sumx += pos[n];
-            sumy += pos[n + 1];
-            sumz += pos[n + 2];
-            cnt++;
-          }
-          if (j > 0) {
-            const n = (idx - N) * 3;
-            sumx += pos[n];
-            sumy += pos[n + 1];
-            sumz += pos[n + 2];
-            cnt++;
-          }
-          if (j < N - 1) {
-            const n = (idx + N) * 3;
-            sumx += pos[n];
-            sumy += pos[n + 1];
-            sumz += pos[n + 2];
-            cnt++;
-          }
-          ax += coupling * (sumx - cnt * ox);
-          ay += coupling * (sumy - cnt * oy);
-          az += coupling * (sumz - cnt * oz);
+          const n4 = idx * 4;
+          const n0 = neighbors[n4] * 3;
+          const n1 = neighbors[n4 + 1] * 3;
+          const n2 = neighbors[n4 + 2] * 3;
+          const n3 = neighbors[n4 + 3] * 3;
+
+          const sumx = pos[n0] + pos[n1] + pos[n2] + pos[n3];
+          const sumy = pos[n0 + 1] + pos[n1 + 1] + pos[n2 + 1] + pos[n3 + 1];
+          const sumz = pos[n0 + 2] + pos[n1 + 2] + pos[n2 + 2] + pos[n3 + 2];
+
+          ax += coupling * (sumx - 4 * ox);
+          ay += coupling * (sumy - 4 * oy);
+          az += coupling * (sumz - 4 * oz);
 
           if (active) {
             const dx = pointer.x - (baseX[idx] + ox);
             const dy = pointer.y - (baseY[idx] + oy);
-            const d = Math.sqrt(dx * dx + dy * dy);
-            const tnorm = d * invR;
-            if (tnorm < 1) {
-              const zBump = 1 - tnorm * tnorm;
+            const d2 = dx * dx + dy * dy;
+            const r2 = r * r;
+
+            if (d2 < r2) {
+              const tnorm2 = d2 / r2;
+              const zBump = 1 - tnorm2;
               az += force * zBump * zBump * 6.0;
-              if (d > 1e-4) {
+
+              if (d2 > 1e-8) {
+                const d = Math.sqrt(d2);
+                const tnorm = d * invR;
                 const pinch = tnorm * (1 - tnorm) * (1 - tnorm) * 6.75;
                 const dir = (force * pinch * 1.6) / d;
                 ax += dx * dir;
@@ -462,6 +505,7 @@ const ElasticMesh = ({
         }
       }
 
+      motionScore = 0;
       for (let k = 0; k < nodeCount; k++) {
         const o3 = k * 3;
         const nvx = (vel[o3] + accel[o3]) * retain;
@@ -470,6 +514,9 @@ const ElasticMesh = ({
         vel[o3] = nvx;
         vel[o3 + 1] = nvy;
         vel[o3 + 2] = nvz;
+
+        const energy = Math.abs(nvx) + Math.abs(nvy) + Math.abs(nvz);
+        if (energy > motionScore) motionScore = energy;
 
         let px = pos[o3] + nvx;
         let py = pos[o3 + 1] + nvy;
@@ -488,6 +535,12 @@ const ElasticMesh = ({
 
     function commit() {
       const needNormals = propsRef.current.shading > 0.0001;
+
+      if (!needNormals) {
+        aOffset.set(pos);
+        geometry.attributes.aOffset.needsUpdate = true;
+        return;
+      }
 
       for (let j = 0; j < N; j++) {
         for (let i = 0; i < N; i++) {
@@ -587,32 +640,6 @@ const ElasticMesh = ({
       }
     }
 
-    function tuneDpr(frameMs) {
-      if (minDpr === maxDpr) return;
-
-      frameTimeSum += frameMs;
-      frameSamples++;
-
-      if (frameSamples < 90) return;
-
-      const average = frameTimeSum / frameSamples;
-      let nextDpr = renderDpr;
-
-      if (average > 19 && renderDpr > minDpr) {
-        nextDpr = Math.max(minDpr, renderDpr - 0.25);
-      } else if (average < 14 && renderDpr < maxDpr) {
-        nextDpr = Math.min(maxDpr, renderDpr + 0.25);
-      }
-
-      frameTimeSum = 0;
-      frameSamples = 0;
-
-      if (nextDpr !== renderDpr) {
-        renderDpr = nextDpr;
-        renderer.dpr = renderDpr;
-        renderer.setSize(viewWidth, viewHeight);
-      }
-    }
 
     let raf = 0;
     let running = false;
@@ -621,15 +648,13 @@ const ElasticMesh = ({
 
     function frame(now) {
       if (!running) return;
-      raf = requestAnimationFrame(frame);
 
       const frameMs = Math.min(now - last, 50);
-      let dt = frameMs / 1000;
+      const dt = frameMs / 1000;
       last = now;
 
       const p = propsRef.current;
       syncUniforms(p);
-      tuneDpr(frameMs);
 
       const tau = 0.06;
       const kLerp = 1 - Math.exp(-Math.max(dt, 1e-4) / tau);
@@ -653,14 +678,32 @@ const ElasticMesh = ({
         sort: false,
         frustumCull: false
       });
+
+      const settled =
+        !pointer.targetActive &&
+        !pointer.active &&
+        motionScore < 0.00002;
+
+      sleepFrames = settled ? sleepFrames + 1 : 0;
+
+      if (sleepFrames >= 12) {
+        running = false;
+        raf = 0;
+        return;
+      }
+
+      raf = requestAnimationFrame(frame);
     }
 
     function start() {
       if (running || !inView || !pageVisible) return;
       running = true;
+      sleepFrames = 0;
       last = performance.now();
       raf = requestAnimationFrame(frame);
     }
+
+    wakeRef.current = start;
 
     function stop() {
       if (!running) return;
@@ -693,14 +736,13 @@ const ElasticMesh = ({
       ro.disconnect();
       io.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
-      container.removeEventListener('mousemove', onMove);
-      container.removeEventListener('mouseenter', onEnter);
-      container.removeEventListener('mouseleave', onLeave);
-      container.removeEventListener('mousedown', onDown);
-      window.removeEventListener('mouseup', onUp);
-      container.removeEventListener('touchstart', onTouch);
-      container.removeEventListener('touchmove', onTouch);
-      container.removeEventListener('touchend', onLeave);
+      wakeRef.current = () => {};
+      container.removeEventListener('pointermove', onPointerMove);
+      container.removeEventListener('pointerenter', onPointerEnter);
+      container.removeEventListener('pointerleave', onPointerLeave);
+      container.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('scroll', onScroll);
       if (gl.canvas.parentElement === container) container.removeChild(gl.canvas);
       const lose = gl.getExtension('WEBGL_lose_context');
       if (lose) lose.loseContext();
