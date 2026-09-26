@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ElasticMesh from '../components/ElasticMesh/ElasticMesh';
 import Ferrofluid from '../components/Ferrofluid/Ferrofluid';
 import CircularGallery from '../components/CircularGallery/CircularGallery';
 import HeroBrand from '../components/HeroBrand/HeroBrand';
 import BranchedMenu from '../components/BranchedMenu/BranchedMenu';
+import LatticeLoader from '../components/LatticeLoader/LatticeLoader';
 
 const previewImage = '/preview.png';
 
@@ -17,6 +18,33 @@ const galleryItems = [
   { image: '/gallery/tower-defense-x.png', text: 'Tower Defense X' },
   { image: '/gallery/violence-district.png', text: 'Violence District' }
 ];
+
+const scripts = {
+  'death-ball': {
+    label: 'Death Ball',
+    code: 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/c12d7a4a94f0d10c27f21ff462e781d5.lua"))()'
+  },
+  'slayers-2': {
+    label: 'Slayer 2',
+    code: 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/15d48ff2a0df2a1e43a7e0a717bae92a.lua"))()'
+  },
+  'violence-district': {
+    label: 'Violence District',
+    code: 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/b64eaf788b0c15c54c17ee96a133bc7a.lua"))()'
+  },
+  'tower-defense-x': {
+    label: 'Tower Defense X',
+    code: 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/5ca685865a7af9226b5e9fef98ae47a7.lua"))()'
+  },
+  'silly-defense': {
+    label: 'Silly Defense',
+    code: 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/2c7eb16a08c32a940d6df4fedceae130.lua"))()'
+  },
+  'retro-tower-defense': {
+    label: 'Retro Tower Defense',
+    code: 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/3c8cbc7e049bf4f49bac804b6d20b337.lua"))()'
+  }
+};
 
 const scriptMenuItems = [
   {
@@ -36,6 +64,34 @@ export default function HomePage() {
   const topRef = useRef(null);
   const galleryRef = useRef(null);
   const menuRef = useRef(null);
+  const doneTimerRef = useRef(0);
+
+  const [selectedScript, setSelectedScript] = useState('death-ball');
+  const [loaderStatus, setLoaderStatus] = useState('working');
+
+  const selected = scripts[selectedScript];
+
+  const selectScript = value => {
+    clearTimeout(doneTimerRef.current);
+    setSelectedScript(value);
+    setLoaderStatus('working');
+  };
+
+  const showDone = () => {
+    clearTimeout(doneTimerRef.current);
+    setLoaderStatus('done');
+
+    doneTimerRef.current = window.setTimeout(() => {
+      setLoaderStatus('working');
+    }, 3000);
+  };
+
+  useEffect(
+    () => () => {
+      clearTimeout(doneTimerRef.current);
+    },
+    []
+  );
 
   useEffect(() => {
     let animating = false;
@@ -43,11 +99,7 @@ export default function HomePage() {
     let scrollEndHandler = null;
 
     const getSections = () =>
-      [
-        topRef.current,
-        galleryRef.current,
-        menuRef.current
-      ].filter(Boolean);
+      [topRef.current, galleryRef.current, menuRef.current].filter(Boolean);
 
     const finishTransition = () => {
       if (!animating) return;
@@ -97,9 +149,7 @@ export default function HomePage() {
       let closestDistance = Infinity;
 
       sections.forEach((section, index) => {
-        const distance = Math.abs(
-          section.getBoundingClientRect().top
-        );
+        const distance = Math.abs(section.getBoundingClientRect().top);
 
         if (distance < closestDistance) {
           closestDistance = distance;
@@ -195,10 +245,7 @@ export default function HomePage() {
         </div>
 
         <div className="top-stack">
-          <div
-            className="mesh-wrap"
-            aria-label="Moon interface preview"
-          >
+          <div className="mesh-wrap" aria-label="Moon interface preview">
             <ElasticMesh
               image={previewImage}
               showGrid={false}
@@ -234,6 +281,7 @@ export default function HomePage() {
             items={scriptMenuItems}
             defaultOpen={0}
             defaultActive="death-ball"
+            onSelect={selectScript}
             color="#ffffff"
             accentColor="#7979ff"
             lineColor="#7979ff"
@@ -247,6 +295,33 @@ export default function HomePage() {
             drawDuration={400}
             foldDuration={300}
           />
+
+          <button
+            type="button"
+            className="script-loader-button"
+            onClick={showDone}
+            aria-label={`${selected.label}. Click to show Done status.`}
+          >
+            <LatticeLoader
+              status={loaderStatus}
+              label={`${selected.label} - ${selected.code}`}
+              doneLabel="Done"
+              errorLabel="Failed"
+              pattern="orbit"
+              grid={4}
+              shape="round"
+              color="#7979ff"
+              doneColor="#22c55e"
+              errorColor="#ef4444"
+              cellSize={6}
+              gap={2}
+              fontSize={14}
+              step={75}
+              idleOpacity={0.15}
+              glow
+              glowColor="#7979ff"
+            />
+          </button>
         </div>
       </section>
     </main>
