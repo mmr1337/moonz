@@ -339,6 +339,15 @@ const ElasticMesh = ({
       }
     }
 
+    const pointer = { x: 0, y: 0, tx: 0, ty: 0, active: false, targetActive: false };
+    let pointerRect = container.getBoundingClientRect();
+    let rectDirty = false;
+
+    function refreshPointerRect() {
+      pointerRect = container.getBoundingClientRect();
+      rectDirty = false;
+    }
+
     function resize(force = false) {
       const w = Math.max(1, Math.round(container.clientWidth || 1));
       const h = Math.max(1, Math.round(container.clientHeight || 1));
@@ -357,15 +366,6 @@ const ElasticMesh = ({
     const ro = new ResizeObserver(() => resize());
     ro.observe(container);
     resize(true);
-
-    const pointer = { x: 0, y: 0, tx: 0, ty: 0, active: false, targetActive: false };
-    let pointerRect = container.getBoundingClientRect();
-    let rectDirty = false;
-
-    function refreshPointerRect() {
-      pointerRect = container.getBoundingClientRect();
-      rectDirty = false;
-    }
 
     function toPlane(clientX, clientY) {
       if (rectDirty) refreshPointerRect();
