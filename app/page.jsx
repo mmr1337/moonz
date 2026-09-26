@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import ElasticMesh from '../components/ElasticMesh/ElasticMesh';
 import Ferrofluid from '../components/Ferrofluid/Ferrofluid';
 import CircularGallery from '../components/CircularGallery/CircularGallery';
+import HeroBrand from '../components/HeroBrand/HeroBrand';
 
 const previewImage = '/preview.png';
 
@@ -162,16 +163,23 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="mesh-wrap" aria-label="Moon interface preview">
-          <ElasticMesh
-            image={previewImage}
-            showGrid={false}
-            borderRadius={28}
-            tilt={8}
-            shading={0}
-            resolution={30}
-            interaction="hover"
-          />
+        <div className="top-stack">
+          <div
+            className="mesh-wrap"
+            aria-label="Moon interface preview"
+          >
+            <ElasticMesh
+              image={previewImage}
+              showGrid={false}
+              borderRadius={28}
+              tilt={8}
+              shading={0}
+              resolution={30}
+              interaction="hover"
+            />
+          </div>
+
+          <HeroBrand />
         </div>
       </section>
 
