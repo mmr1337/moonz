@@ -207,6 +207,7 @@ export default function HomePage() {
               shading={0}
               resolution={30}
               interaction="hover"
+              enabled={false}
             />
           </div>
 
@@ -223,7 +224,7 @@ export default function HomePage() {
           scrollEase={0.08}
           textColor="#b9bdc7"
           font="600 20px Arial"
-          interactive={false}
+          interactive
         />
       </section>
 
