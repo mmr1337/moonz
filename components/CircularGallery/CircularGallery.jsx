@@ -510,9 +510,21 @@ class App {
     this.onCheck();
   }
   onWheel(e) {
+    const horizontalIntent =
+      Math.abs(e.deltaX || 0) > Math.abs(e.deltaY || 0) ||
+      e.shiftKey;
+
+    if (!horizontalIntent) return;
+
     this.start();
-    const delta = e.deltaY || e.wheelDelta || e.detail;
-    this.scroll.target += (delta > 0 ? this.scrollSpeed : -this.scrollSpeed) * 0.2;
+
+    const delta = e.shiftKey
+      ? e.deltaY || e.deltaX
+      : e.deltaX || e.deltaY;
+
+    this.scroll.target +=
+      (delta > 0 ? this.scrollSpeed : -this.scrollSpeed) * 0.2;
+
     this.onCheckDebounce();
   }
   onKeyDown(e) {
