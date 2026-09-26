@@ -403,30 +403,33 @@ export default function HomePage() {
                   <span className="script-row__content">
                     <span className="script-row__meta">
                       <span className="script-row__name">{item.label}</span>
-                      <span
-                        className={`script-row__status${
-                          isCopied ? ' is-visible' : ''
-                        }`}
-                      >
-                        Copied!
-                      </span>
                     </span>
 
                     <LuaCode code={item.code} selected={isSelected} />
                   </span>
 
-                  <span
-                    className={`script-row__image-frame${
-                      isSelected ? ' is-selected' : ''
-                    }`}
-                    aria-hidden="true"
-                  >
-                    <img
-                      src={item.image}
-                      alt=""
-                      className="script-row__image"
-                      draggable="false"
-                    />
+                  <span className="script-row__trailing">
+                    <span
+                      className={`script-row__status${
+                        isCopied ? ' is-visible' : ''
+                      }`}
+                    >
+                      Copied!
+                    </span>
+
+                    <span
+                      className={`script-row__image-frame${
+                        isSelected ? ' is-selected' : ''
+                      }`}
+                      aria-hidden="true"
+                    >
+                      <img
+                        src={item.image}
+                        alt=""
+                        className="script-row__image"
+                        draggable="false"
+                      />
+                    </span>
                   </span>
                 </button>
               );
