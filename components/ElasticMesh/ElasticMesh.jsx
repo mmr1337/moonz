@@ -178,7 +178,19 @@ const ElasticMesh = ({
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const renderer = new Renderer({ alpha: true, antialias: true, dpr: Math.min(window.devicePixelRatio || 1, 2) });
+    const deviceDpr = window.devicePixelRatio || 1;
+    const minDpr = Math.min(deviceDpr, 2);
+    const maxDpr = Math.min(deviceDpr, 3);
+    let renderDpr = maxDpr;
+
+    const renderer = new Renderer({
+      alpha: true,
+      antialias: true,
+      depth: false,
+      stencil: false,
+      dpr: renderDpr,
+      powerPreference: 'high-performance'
+    });
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 0);
     gl.enable(gl.BLEND);
@@ -236,6 +248,8 @@ const ElasticMesh = ({
     if (image) {
       const img = new Image();
       img.crossOrigin = 'anonymous';
+      img.decoding = 'async';
+      img.fetchPriority = 'high';
       img.src = image;
       img.onload = () => {
         texture.image = img;
@@ -277,6 +291,9 @@ const ElasticMesh = ({
     const accel = new Float32Array(nodeCount * 3);
 
     let aspect = 1;
+    let viewWidth = 1;
+    let viewHeight = 1;
+
     function refreshBase() {
       for (let idx = 0; idx < nodeCount; idx++) {
         baseX[idx] = (aGrid[idx * 2] * 2 - 1) * aspect;
@@ -284,19 +301,23 @@ const ElasticMesh = ({
       }
     }
 
-    function resize() {
-      const w = container.offsetWidth || 1;
-      const h = container.offsetHeight || 1;
-      renderer.setSize(w, h);
-      aspect = w / h;
+    function resize(force = false) {
+      const w = Math.max(1, Math.round(container.clientWidth || 1));
+      const h = Math.max(1, Math.round(container.clientHeight || 1));
+      if (!force && w === viewWidth && h === viewHeight) return;
+
+      viewWidth = w;
+      viewHeight = h;
+      renderer.setSize(viewWidth, viewHeight);
+      aspect = viewWidth / viewHeight;
       program.uniforms.uAspect.value = aspect;
-      program.uniforms.uRes.value = [w, h];
+      program.uniforms.uRes.value = [viewWidth, viewHeight];
       refreshBase();
     }
 
-    const ro = new ResizeObserver(resize);
+    const ro = new ResizeObserver(() => resize());
     ro.observe(container);
-    resize();
+    resize(true);
 
     const pointer = { x: 0, y: 0, tx: 0, ty: 0, active: false, targetActive: false };
 
@@ -357,8 +378,8 @@ const ElasticMesh = ({
     const MAX_SUB = 5;
     let accTime = 0;
     let last = performance.now();
-    let maxOffset = 0;
-    let maxVel = 0;
+    let frameTimeSum = 0;
+    let frameSamples = 0;
 
     function substep() {
       const p = propsRef.current;
@@ -466,83 +487,149 @@ const ElasticMesh = ({
     }
 
     function commit() {
-      maxOffset = 0;
-      maxVel = 0;
+      const needNormals = propsRef.current.shading > 0.0001;
+
       for (let j = 0; j < N; j++) {
         for (let i = 0; i < N; i++) {
           const idx = j * N + i;
           const o3 = idx * 3;
-          const iL = i > 0 ? idx - 1 : idx;
-          const iR = i < N - 1 ? idx + 1 : idx;
-          const iD = j > 0 ? idx - N : idx;
-          const iU = j < N - 1 ? idx + N : idx;
+          if (needNormals) {
+            const iL = i > 0 ? idx - 1 : idx;
+            const iR = i < N - 1 ? idx + 1 : idx;
+            const iD = j > 0 ? idx - N : idx;
+            const iU = j < N - 1 ? idx + N : idx;
 
-          const lx = baseX[iL] + pos[iL * 3];
-          const ly = baseY[iL] + pos[iL * 3 + 1];
-          const lz = pos[iL * 3 + 2];
-          const rx = baseX[iR] + pos[iR * 3];
-          const ry = baseY[iR] + pos[iR * 3 + 1];
-          const rz = pos[iR * 3 + 2];
-          const dx = baseX[iD] + pos[iD * 3];
-          const dy = baseY[iD] + pos[iD * 3 + 1];
-          const dz = pos[iD * 3 + 2];
-          const ux = baseX[iU] + pos[iU * 3];
-          const uy = baseY[iU] + pos[iU * 3 + 1];
-          const uz = pos[iU * 3 + 2];
+            const lx = baseX[iL] + pos[iL * 3];
+            const ly = baseY[iL] + pos[iL * 3 + 1];
+            const lz = pos[iL * 3 + 2];
+            const rx = baseX[iR] + pos[iR * 3];
+            const ry = baseY[iR] + pos[iR * 3 + 1];
+            const rz = pos[iR * 3 + 2];
+            const dx = baseX[iD] + pos[iD * 3];
+            const dy = baseY[iD] + pos[iD * 3 + 1];
+            const dz = pos[iD * 3 + 2];
+            const ux = baseX[iU] + pos[iU * 3];
+            const uy = baseY[iU] + pos[iU * 3 + 1];
+            const uz = pos[iU * 3 + 2];
 
-          const txx = rx - lx;
-          const txy = ry - ly;
-          const txz = rz - lz;
-          const tyx = ux - dx;
-          const tyy = uy - dy;
-          const tyz = uz - dz;
+            const txx = rx - lx;
+            const txy = ry - ly;
+            const txz = rz - lz;
+            const tyx = ux - dx;
+            const tyy = uy - dy;
+            const tyz = uz - dz;
 
-          let nx = txy * tyz - txz * tyy;
-          let ny = txz * tyx - txx * tyz;
-          let nz = txx * tyy - txy * tyx;
-          if (nz < 0) {
-            nx = -nx;
-            ny = -ny;
-            nz = -nz;
+            let nx = txy * tyz - txz * tyy;
+            let ny = txz * tyx - txx * tyz;
+            let nz = txx * tyy - txy * tyx;
+            if (nz < 0) {
+              nx = -nx;
+              ny = -ny;
+              nz = -nz;
+            }
+
+            const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+            aNormal[o3] = nx / len;
+            aNormal[o3 + 1] = ny / len;
+            aNormal[o3 + 2] = nz / len;
           }
-          const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
-          aNormal[o3] = nx / len;
-          aNormal[o3 + 1] = ny / len;
-          aNormal[o3 + 2] = nz / len;
 
           aOffset[o3] = pos[o3];
           aOffset[o3 + 1] = pos[o3 + 1];
           aOffset[o3 + 2] = pos[o3 + 2];
-
-          const om = Math.abs(pos[o3]) + Math.abs(pos[o3 + 1]) + Math.abs(pos[o3 + 2]);
-          if (om > maxOffset) maxOffset = om;
-          const vm = Math.abs(vel[o3]) + Math.abs(vel[o3 + 1]) + Math.abs(vel[o3 + 2]);
-          if (vm > maxVel) maxVel = vm;
         }
       }
       geometry.attributes.aOffset.needsUpdate = true;
       geometry.attributes.aNormal.needsUpdate = true;
     }
 
+    const uniformCache = {};
+    function syncUniforms(p) {
+      if (uniformCache.shading !== p.shading) {
+        program.uniforms.uShading.value = p.shading;
+        uniformCache.shading = p.shading;
+      }
+      if (uniformCache.borderRadius !== p.borderRadius) {
+        program.uniforms.uRadius.value = p.borderRadius;
+        uniformCache.borderRadius = p.borderRadius;
+      }
+      if (uniformCache.tilt !== p.tilt) {
+        program.uniforms.uTilt.value = (p.tilt * Math.PI) / 180;
+        uniformCache.tilt = p.tilt;
+      }
+      if (uniformCache.color1 !== p.color1) {
+        program.uniforms.uColor1.value = hexToRgb(p.color1);
+        uniformCache.color1 = p.color1;
+      }
+      if (uniformCache.color2 !== p.color2) {
+        program.uniforms.uColor2.value = hexToRgb(p.color2);
+        uniformCache.color2 = p.color2;
+      }
+      if (uniformCache.highlight !== p.highlight) {
+        program.uniforms.uHighlight.value = hexToRgb(p.highlight);
+        uniformCache.highlight = p.highlight;
+      }
+      if (uniformCache.showGrid !== p.showGrid) {
+        program.uniforms.uGrid.value = p.showGrid ? 1 : 0;
+        uniformCache.showGrid = p.showGrid;
+      }
+      if (uniformCache.gridDensity !== p.gridDensity) {
+        program.uniforms.uGridDensity.value = p.gridDensity;
+        uniformCache.gridDensity = p.gridDensity;
+      }
+      if (uniformCache.gridOpacity !== p.gridOpacity) {
+        program.uniforms.uGridOpacity.value = p.gridOpacity;
+        uniformCache.gridOpacity = p.gridOpacity;
+      }
+      if (uniformCache.gridColor !== p.gridColor) {
+        program.uniforms.uGridColor.value = hexToRgb(p.gridColor);
+        uniformCache.gridColor = p.gridColor;
+      }
+    }
+
+    function tuneDpr(frameMs) {
+      if (minDpr === maxDpr) return;
+
+      frameTimeSum += frameMs;
+      frameSamples++;
+
+      if (frameSamples < 90) return;
+
+      const average = frameTimeSum / frameSamples;
+      let nextDpr = renderDpr;
+
+      if (average > 19 && renderDpr > minDpr) {
+        nextDpr = Math.max(minDpr, renderDpr - 0.25);
+      } else if (average < 14 && renderDpr < maxDpr) {
+        nextDpr = Math.min(maxDpr, renderDpr + 0.25);
+      }
+
+      frameTimeSum = 0;
+      frameSamples = 0;
+
+      if (nextDpr !== renderDpr) {
+        renderDpr = nextDpr;
+        renderer.dpr = renderDpr;
+        renderer.setSize(viewWidth, viewHeight);
+      }
+    }
+
     let raf = 0;
+    let running = false;
+    let inView = true;
+    let pageVisible = !document.hidden;
+
     function frame(now) {
+      if (!running) return;
       raf = requestAnimationFrame(frame);
-      const p = propsRef.current;
 
-      program.uniforms.uShading.value = p.shading;
-      program.uniforms.uRadius.value = p.borderRadius;
-      program.uniforms.uTilt.value = (p.tilt * Math.PI) / 180;
-      program.uniforms.uColor1.value = hexToRgb(p.color1);
-      program.uniforms.uColor2.value = hexToRgb(p.color2);
-      program.uniforms.uHighlight.value = hexToRgb(p.highlight);
-      program.uniforms.uGrid.value = p.showGrid ? 1 : 0;
-      program.uniforms.uGridDensity.value = p.gridDensity;
-      program.uniforms.uGridOpacity.value = p.gridOpacity;
-      program.uniforms.uGridColor.value = hexToRgb(p.gridColor);
-
-      let dt = (now - last) / 1000;
+      const frameMs = Math.min(now - last, 50);
+      let dt = frameMs / 1000;
       last = now;
-      if (dt > 0.25) dt = 0.25;
+
+      const p = propsRef.current;
+      syncUniforms(p);
+      tuneDpr(frameMs);
 
       const tau = 0.06;
       const kLerp = 1 - Math.exp(-Math.max(dt, 1e-4) / tau);
@@ -560,15 +647,52 @@ const ElasticMesh = ({
       if (accTime > STEP) accTime = 0;
 
       commit();
-      renderer.render({ scene: mesh });
+      renderer.render({
+        scene: mesh,
+        update: false,
+        sort: false,
+        frustumCull: false
+      });
     }
-    raf = requestAnimationFrame(frame);
+
+    function start() {
+      if (running || !inView || !pageVisible) return;
+      running = true;
+      last = performance.now();
+      raf = requestAnimationFrame(frame);
+    }
+
+    function stop() {
+      if (!running) return;
+      running = false;
+      cancelAnimationFrame(raf);
+    }
+
+    const io = new IntersectionObserver(
+      entries => {
+        inView = entries[0]?.isIntersecting ?? true;
+        if (inView) start();
+        else stop();
+      },
+      { rootMargin: '120px' }
+    );
+    io.observe(container);
+
+    const onVisibility = () => {
+      pageVisible = !document.hidden;
+      if (pageVisible) start();
+      else stop();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
 
     container.appendChild(gl.canvas);
+    start();
 
     return () => {
-      cancelAnimationFrame(raf);
+      stop();
       ro.disconnect();
+      io.disconnect();
+      document.removeEventListener('visibilitychange', onVisibility);
       container.removeEventListener('mousemove', onMove);
       container.removeEventListener('mouseenter', onEnter);
       container.removeEventListener('mouseleave', onLeave);

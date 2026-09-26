@@ -154,7 +154,10 @@ export default function Ferrofluid({
     const renderer = new Renderer({
       alpha: true,
       antialias: true,
-      dpr: Math.min(window.devicePixelRatio || 1, 2)
+      depth: false,
+      stencil: false,
+      dpr: Math.min(window.devicePixelRatio || 1, 2),
+      powerPreference: 'high-performance'
     });
 
     const gl = renderer.gl;
@@ -190,9 +193,17 @@ export default function Ferrofluid({
 
     container.appendChild(canvas);
 
-    const resize = () => {
-      const rect = container.getBoundingClientRect();
-      renderer.setSize(rect.width, rect.height);
+    let viewWidth = 1;
+    let viewHeight = 1;
+
+    const resize = (force = false) => {
+      const width = Math.max(1, Math.round(container.clientWidth || 1));
+      const height = Math.max(1, Math.round(container.clientHeight || 1));
+      if (!force && width === viewWidth && height === viewHeight) return;
+
+      viewWidth = width;
+      viewHeight = height;
+      renderer.setSize(viewWidth, viewHeight);
       uniforms.iResolution.value = [
         gl.drawingBufferWidth,
         gl.drawingBufferHeight,
@@ -200,21 +211,71 @@ export default function Ferrofluid({
       ];
     };
 
-    const ro = new ResizeObserver(resize);
+    const ro = new ResizeObserver(() => resize());
     ro.observe(container);
-    resize();
+    resize(true);
 
     let raf = 0;
+    let running = false;
+    let inView = true;
+    let pageVisible = !document.hidden;
+    let lastTime = 0;
+    let elapsed = 0;
+
     const frame = time => {
+      if (!running) return;
       raf = requestAnimationFrame(frame);
-      uniforms.iTime.value = time * 0.001;
-      renderer.render({ scene: mesh });
+
+      if (!lastTime) lastTime = time;
+      elapsed += Math.min((time - lastTime) / 1000, 0.05);
+      lastTime = time;
+
+      uniforms.iTime.value = elapsed;
+      renderer.render({
+        scene: mesh,
+        update: false,
+        sort: false,
+        frustumCull: false
+      });
     };
-    raf = requestAnimationFrame(frame);
+
+    const start = () => {
+      if (running || !inView || !pageVisible) return;
+      running = true;
+      lastTime = 0;
+      raf = requestAnimationFrame(frame);
+    };
+
+    const stop = () => {
+      if (!running) return;
+      running = false;
+      cancelAnimationFrame(raf);
+    };
+
+    const io = new IntersectionObserver(
+      entries => {
+        inView = entries[0]?.isIntersecting ?? true;
+        if (inView) start();
+        else stop();
+      },
+      { rootMargin: '80px' }
+    );
+    io.observe(container);
+
+    const onVisibility = () => {
+      pageVisible = !document.hidden;
+      if (pageVisible) start();
+      else stop();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    start();
 
     return () => {
-      cancelAnimationFrame(raf);
+      stop();
       ro.disconnect();
+      io.disconnect();
+      document.removeEventListener('visibilitychange', onVisibility);
       if (canvas.parentElement === container) container.removeChild(canvas);
       const lose = gl.getExtension('WEBGL_lose_context');
       if (lose) lose.loseContext();

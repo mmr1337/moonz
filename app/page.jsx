@@ -1,8 +1,7 @@
 import ElasticMesh from '../components/ElasticMesh/ElasticMesh';
 import Ferrofluid from '../components/Ferrofluid/Ferrofluid';
 
-const previewImage =
-  'https://raw.githubusercontent.com/mmr1337/moonz/main/image/preview.png';
+const previewImage = '/preview.png';
 
 export default function HomePage() {
   return (
@@ -31,6 +30,7 @@ export default function HomePage() {
             borderRadius={28}
             tilt={8}
             shading={0}
+            resolution={30}
             interaction="hover"
           />
         </div>
