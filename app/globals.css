@@ -6,10 +6,12 @@ html,
 body {
   margin: 0;
   min-height: 100%;
+  background: #07090d;
 }
 
 body {
   min-height: 100vh;
+  min-height: 100svh;
   background: #07090d;
   overflow-x: hidden;
 }
@@ -22,10 +24,11 @@ body {
 .top-section {
   position: relative;
   min-height: 100vh;
+  min-height: 100svh;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 20px;
+  padding: clamp(12px, 2vw, 20px);
   overflow: hidden;
   isolation: isolate;
 }
@@ -35,8 +38,7 @@ body {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: 1;
-  contain: paint;
+  contain: strict;
   -webkit-mask-image: linear-gradient(
     to bottom,
     #000 0%,
@@ -59,18 +61,20 @@ body {
   width: min(900px, 100%);
   aspect-ratio: 613 / 403;
   overflow: hidden;
+  contain: layout paint size;
+}
+
+.gallery-section {
+  width: 100%;
+  height: min(760px, 100svh);
+  min-height: 520px;
+  background: #07090d;
   contain: layout paint;
 }
 
-.below-fold {
-  min-height: 100vh;
-  background: #07090d;
-  content-visibility: auto;
-  contain-intrinsic-size: 100vh;
-}
-
-@media (max-width: 640px) {
-  .top-section {
-    padding: 12px;
+@media (max-width: 700px) {
+  .gallery-section {
+    height: 560px;
+    min-height: 460px;
   }
 }
