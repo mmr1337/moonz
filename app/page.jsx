@@ -6,6 +6,7 @@ import Ferrofluid from '../components/Ferrofluid/Ferrofluid';
 import CircularGallery from '../components/CircularGallery/CircularGallery';
 import HeroBrand from '../components/HeroBrand/HeroBrand';
 import BranchedMenu from '../components/BranchedMenu/BranchedMenu';
+import LatticeLoader from '../components/LatticeLoader/LatticeLoader';
 
 const previewImage = '/preview.png';
 
@@ -107,7 +108,6 @@ export default function HomePage() {
   const [copiedScript, setCopiedScript] = useState('');
 
   const selected = scripts[selectedScript];
-  const selectedImage = scriptImageMap[selectedScript];
 
   const selectScript = value => {
     setSelectedScript(value);
@@ -380,32 +380,60 @@ export default function HomePage() {
                   onClick={() => copyScript(key, item.code)}
                   aria-label={`Copy ${item.label} loadstring`}
                 >
-                  <div className="script-row__meta">
-                    <span className="script-row__name">{item.label}</span>
-                    <span
-                      className={`script-row__status${
-                        isCopied ? ' is-visible' : ''
-                      }`}
-                    >
-                      Copied!
-                    </span>
-                  </div>
+                  <span className="script-row__loader" aria-hidden="true">
+                    <LatticeLoader
+                      status={isCopied ? 'done' : 'working'}
+                      label=""
+                      doneLabel=""
+                      errorLabel=""
+                      pattern="orbit"
+                      grid={4}
+                      shape="round"
+                      color="#7979ff"
+                      doneColor="#22c55e"
+                      errorColor="#ef4444"
+                      cellSize={6}
+                      gap={2}
+                      fontSize={14}
+                      step={75}
+                      idleOpacity={0.15}
+                      glow
+                      glowColor="#7979ff"
+                      showLabel={false}
+                    />
+                  </span>
 
-                  <LuaCode code={item.code} highlighted={isSelected} />
+                  <span className="script-row__content">
+                    <span className="script-row__meta">
+                      <span className="script-row__name">{item.label}</span>
+                      <span
+                        className={`script-row__status${
+                          isCopied ? ' is-visible' : ''
+                        }`}
+                      >
+                        Copied!
+                      </span>
+                    </span>
+
+                    <LuaCode code={item.code} highlighted={isSelected} />
+                  </span>
+
+                  <span
+                    className={`script-row__image-frame${
+                      isSelected ? ' is-selected' : ''
+                    }`}
+                    aria-hidden="true"
+                  >
+                    <img
+                      src={scriptImageMap[key]}
+                      alt=""
+                      className="script-row__image"
+                      draggable="false"
+                    />
+                  </span>
                 </button>
               );
             })}
-          </div>
-
-          <div className="script-preview">
-            <img
-              key={selectedScript}
-              src={selectedImage}
-              alt={selected.label}
-              className="script-preview__image"
-              draggable="false"
-            />
-            <span className="script-preview__caption">{selected.label}</span>
           </div>
         </div>
       </section>
