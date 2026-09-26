@@ -66,10 +66,11 @@ body {
 
 .gallery-section {
   width: 100%;
-  height: min(760px, 100svh);
-  min-height: 520px;
+  height: clamp(520px, 78svh, 760px);
   background: #07090d;
-  contain: layout paint;
+  contain: layout paint size;
+  content-visibility: auto;
+  contain-intrinsic-size: 760px;
 }
 
 @media (max-width: 700px) {

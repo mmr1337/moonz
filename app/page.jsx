@@ -5,36 +5,12 @@ import CircularGallery from '../components/CircularGallery/CircularGallery';
 const previewImage = '/preview.png';
 
 const galleryItems = [
-  {
-    image:
-      'https://raw.githubusercontent.com/mmr1337/moonz/main/image/Death%20Ball.png',
-    text: 'Death Ball'
-  },
-  {
-    image:
-      'https://raw.githubusercontent.com/mmr1337/moonz/main/image/Retro%20Tower%20Defense.png',
-    text: 'Retro Tower Defense'
-  },
-  {
-    image:
-      'https://raw.githubusercontent.com/mmr1337/moonz/main/image/Silly%20Defense.png',
-    text: 'Silly Defense'
-  },
-  {
-    image:
-      'https://raw.githubusercontent.com/mmr1337/moonz/main/image/Slayers%202.png',
-    text: 'Slayers 2'
-  },
-  {
-    image:
-      'https://raw.githubusercontent.com/mmr1337/moonz/main/image/Tower%20Defense%20X.png',
-    text: 'Tower Defense X'
-  },
-  {
-    image:
-      'https://raw.githubusercontent.com/mmr1337/moonz/main/image/Violence%20District.png',
-    text: 'Violence District'
-  }
+  { image: '/gallery/death-ball.png', text: '' },
+  { image: '/gallery/retro-tower-defense.png', text: '' },
+  { image: '/gallery/silly-defense.png', text: '' },
+  { image: '/gallery/slayers-2.png', text: '' },
+  { image: '/gallery/tower-defense-x.png', text: '' },
+  { image: '/gallery/violence-district.png', text: '' }
 ];
 
 export default function HomePage() {
@@ -76,7 +52,8 @@ export default function HomePage() {
           bend={-5}
           borderRadius={0.055}
           scrollSpeed={1}
-          scrollEase={0.12}
+          scrollEase={0.08}
+          font="bold 1px sans-serif"
         />
       </section>
     </main>
