@@ -593,7 +593,7 @@ class App {
     if (this.running || !this.visible || !this.pageVisible) return;
     this.running = true;
     this.lastTime = performance.now();
-    this.raf = window.requestAnimationFrame(this.update);
+    this.raf = window.requestAnimationFrame(this.boundUpdate);
   }
 
   stop() {
