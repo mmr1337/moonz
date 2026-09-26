@@ -1,8 +1,8 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Moon — информационная карточка',
-  description: 'Минималистичная информационная карточка Moon'
+  title: 'moon',
+  description: 'moon'
 };
 
 export default function RootLayout({ children }) {
