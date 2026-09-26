@@ -12,7 +12,7 @@ export default function HomePage() {
           showGrid={false}
           borderRadius={28}
           tilt={8}
-          shading={0.35}
+          shading={0}
           interaction="hover"
         />
       </div>
