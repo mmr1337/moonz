@@ -39,6 +39,7 @@ export default function LatticeLoader({
   idleOpacity = 0.15,
   glow = true,
   glowColor = '#7979ff',
+  showLabel = true,
   className = '',
   style
 }) {
@@ -114,6 +115,7 @@ export default function LatticeLoader({
         </span>
       </span>
 
+      {showLabel ? (
       <span className="lattice-loader__label" aria-hidden="true">
         <span
           className="lattice-loader__text"
@@ -134,6 +136,7 @@ export default function LatticeLoader({
           {errorLabel}
         </span>
       </span>
+      ) : null}
 
       <span className="lattice-loader__sr">{announce}</span>
     </span>
