@@ -77,9 +77,39 @@ export default function HomePage() {
     setLoaderStatus('working');
   };
 
-  const showDone = () => {
+  const copySelectedScript = async () => {
     clearTimeout(doneTimerRef.current);
-    setLoaderStatus('done');
+
+    const text = selected.code;
+    let copied = false;
+
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        copied = true;
+      }
+    } catch {}
+
+    if (!copied) {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        textarea.style.pointerEvents = 'none';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        textarea.setSelectionRange(0, textarea.value.length);
+        copied = document.execCommand('copy');
+        textarea.remove();
+      } catch {
+        copied = false;
+      }
+    }
+
+    setLoaderStatus(copied ? 'done' : 'error');
 
     doneTimerRef.current = window.setTimeout(() => {
       setLoaderStatus('working');
@@ -295,18 +325,20 @@ export default function HomePage() {
             drawDuration={400}
             foldDuration={300}
           />
+        </div>
 
+        <div className="menu-loader-center">
           <button
             type="button"
             className="script-loader-button"
-            onClick={showDone}
-            aria-label={`${selected.label}. Click to show Done status.`}
+            onClick={copySelectedScript}
+            aria-label={`Copy ${selected.label} loadstring`}
           >
             <LatticeLoader
               status={loaderStatus}
-              label={`${selected.label} - ${selected.code}`}
-              doneLabel="Done"
-              errorLabel="Failed"
+              label={selected.code}
+              doneLabel="Copied!"
+              errorLabel="Copy failed"
               pattern="orbit"
               grid={4}
               shape="round"
