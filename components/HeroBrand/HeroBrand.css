@@ -2,9 +2,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(14px, 2vw, 26px);
-  width: min(640px, 88vw);
-  height: clamp(112px, 13vw, 158px);
+  gap: clamp(18px, 2.2vw, 34px);
+  width: min(900px, 96vw);
+  height: clamp(190px, 21vw, 250px);
   flex: 0 0 auto;
   pointer-events: none;
   user-select: none;
@@ -12,8 +12,8 @@
 
 .hero-brand__logo {
   position: relative;
-  width: clamp(112px, 11vw, 158px);
-  height: clamp(112px, 11vw, 158px);
+  width: clamp(250px, 23vw, 320px);
+  height: clamp(250px, 23vw, 320px);
   flex: 0 0 auto;
 }
 
@@ -23,12 +23,12 @@
 }
 
 .hero-brand__wordmark {
-  width: clamp(270px, 31vw, 410px);
+  width: clamp(430px, 46vw, 560px);
   min-width: 0;
 }
 
 .hero-brand__wordmark .stroke-text__svg {
-  height: clamp(94px, 11vw, 138px);
+  height: clamp(150px, 16vw, 205px);
 }
 
 .hero-brand__wordmark .stroke-text__stroke,
@@ -36,23 +36,44 @@
   font-family: Arial, Helvetica, sans-serif;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   .hero-brand {
-    width: min(480px, 94vw);
-    height: clamp(88px, 22vw, 118px);
-    gap: 10px;
+    width: min(760px, 96vw);
+    height: clamp(150px, 24vw, 210px);
+    gap: 14px;
   }
 
   .hero-brand__logo {
-    width: clamp(88px, 21vw, 116px);
-    height: clamp(88px, 21vw, 116px);
+    width: clamp(190px, 27vw, 250px);
+    height: clamp(190px, 27vw, 250px);
   }
 
   .hero-brand__wordmark {
-    width: clamp(210px, 52vw, 300px);
+    width: clamp(330px, 52vw, 470px);
   }
 
   .hero-brand__wordmark .stroke-text__svg {
-    height: clamp(78px, 20vw, 108px);
+    height: clamp(120px, 20vw, 165px);
+  }
+}
+
+@media (max-width: 700px) {
+  .hero-brand {
+    width: min(560px, 98vw);
+    height: clamp(120px, 31vw, 170px);
+    gap: 8px;
+  }
+
+  .hero-brand__logo {
+    width: clamp(145px, 32vw, 190px);
+    height: clamp(145px, 32vw, 190px);
+  }
+
+  .hero-brand__wordmark {
+    width: clamp(250px, 58vw, 350px);
+  }
+
+  .hero-brand__wordmark .stroke-text__svg {
+    height: clamp(96px, 24vw, 132px);
   }
 }
