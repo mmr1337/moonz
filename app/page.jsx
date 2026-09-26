@@ -6,7 +6,6 @@ import Ferrofluid from '../components/Ferrofluid/Ferrofluid';
 import CircularGallery from '../components/CircularGallery/CircularGallery';
 import HeroBrand from '../components/HeroBrand/HeroBrand';
 import BranchedMenu from '../components/BranchedMenu/BranchedMenu';
-import LatticeLoader from '../components/LatticeLoader/LatticeLoader';
 
 const previewImage = '/preview.png';
 
@@ -46,6 +45,17 @@ const scripts = {
   }
 };
 
+const scriptImageMap = {
+  'death-ball': '/gallery/death-ball.png',
+  'retro-tower-defense': '/gallery/retro-tower-defense.png',
+  'silly-defense': '/gallery/silly-defense.png',
+  'slayers-2': '/gallery/slayers-2.png',
+  'tower-defense-x': '/gallery/tower-defense-x.png',
+  'violence-district': '/gallery/violence-district.png'
+};
+
+const scriptEntries = Object.entries(scripts);
+
 const scriptMenuItems = [
   {
     label: 'Scripts',
@@ -60,27 +70,52 @@ const scriptMenuItems = [
   }
 ];
 
+function LuaCode({ code, highlighted }) {
+  if (!highlighted) {
+    return <code className="lua-code lua-code--plain">{code}</code>;
+  }
+
+  const match = code.match(/^loadstring\\(game:HttpGet\\("(.+)"\\)\\)\\(\\)$/);
+
+  if (!match) {
+    return <code className="lua-code">{code}</code>;
+  }
+
+  const url = match[1];
+
+  return (
+    <code className="lua-code">
+      <span className="lua-fn">loadstring</span>
+      <span className="lua-punc">(</span>
+      <span className="lua-global">game</span>
+      <span className="lua-punc">:</span>
+      <span className="lua-method">HttpGet</span>
+      <span className="lua-punc">(</span>
+      <span className="lua-string">"{url}"</span>
+      <span className="lua-punc">))()</span>
+    </code>
+  );
+}
+
 export default function HomePage() {
   const topRef = useRef(null);
   const galleryRef = useRef(null);
   const menuRef = useRef(null);
-  const doneTimerRef = useRef(0);
+  const copiedTimerRef = useRef(0);
 
   const [selectedScript, setSelectedScript] = useState('death-ball');
-  const [loaderStatus, setLoaderStatus] = useState('working');
+  const [copiedScript, setCopiedScript] = useState('');
 
   const selected = scripts[selectedScript];
+  const selectedImage = scriptImageMap[selectedScript];
 
   const selectScript = value => {
-    clearTimeout(doneTimerRef.current);
     setSelectedScript(value);
-    setLoaderStatus('working');
   };
 
-  const copySelectedScript = async () => {
-    clearTimeout(doneTimerRef.current);
+  const copyScript = async (key, text) => {
+    clearTimeout(copiedTimerRef.current);
 
-    const text = selected.code;
     let copied = false;
 
     try {
@@ -109,16 +144,18 @@ export default function HomePage() {
       }
     }
 
-    setLoaderStatus(copied ? 'done' : 'error');
+    if (!copied) return;
 
-    doneTimerRef.current = window.setTimeout(() => {
-      setLoaderStatus('working');
+    setCopiedScript(key);
+
+    copiedTimerRef.current = window.setTimeout(() => {
+      setCopiedScript('');
     }, 3000);
   };
 
   useEffect(
     () => () => {
-      clearTimeout(doneTimerRef.current);
+      clearTimeout(copiedTimerRef.current);
     },
     []
   );
@@ -327,33 +364,49 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="menu-loader-center">
-          <button
-            type="button"
-            className="script-loader-button"
-            onClick={copySelectedScript}
-            aria-label={`Copy ${selected.label} loadstring`}
-          >
-            <LatticeLoader
-              status={loaderStatus}
-              label={selected.code}
-              doneLabel="Copied!"
-              errorLabel="Copy failed"
-              pattern="orbit"
-              grid={4}
-              shape="round"
-              color="#7979ff"
-              doneColor="#22c55e"
-              errorColor="#ef4444"
-              cellSize={6}
-              gap={2}
-              fontSize={14}
-              step={75}
-              idleOpacity={0.15}
-              glow
-              glowColor="#7979ff"
+        <div className="scripts-layout">
+          <div className="scripts-list">
+            {scriptEntries.map(([key, item]) => {
+              const isSelected = key === selectedScript;
+              const isCopied = key === copiedScript;
+
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={`script-row${isSelected ? ' is-selected' : ''}${
+                    isCopied ? ' is-copied' : ''
+                  }`}
+                  onClick={() => copyScript(key, item.code)}
+                  aria-label={`Copy ${item.label} loadstring`}
+                >
+                  <div className="script-row__meta">
+                    <span className="script-row__name">{item.label}</span>
+                    <span
+                      className={`script-row__status${
+                        isCopied ? ' is-visible' : ''
+                      }`}
+                    >
+                      Copied!
+                    </span>
+                  </div>
+
+                  <LuaCode code={item.code} highlighted={isSelected} />
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="script-preview">
+            <img
+              key={selectedScript}
+              src={selectedImage}
+              alt={selected.label}
+              className="script-preview__image"
+              draggable="false"
             />
-          </button>
+            <span className="script-preview__caption">{selected.label}</span>
+          </div>
         </div>
       </section>
     </main>
