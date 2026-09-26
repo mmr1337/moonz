@@ -164,8 +164,7 @@ export default function HomePage() {
 
   useEffect(() => {
     let animating = false;
-    let unlockTimer = 0;
-    let scrollEndHandler = null;
+    let transitionRaf = 0;
     let touchStartX = 0;
     let touchStartY = 0;
     let touchAxis = null;
@@ -175,17 +174,15 @@ export default function HomePage() {
       [topRef.current, galleryRef.current, menuRef.current].filter(Boolean);
 
     const finishTransition = () => {
-      if (!animating) return;
-
       animating = false;
+      transitionRaf = 0;
       document.documentElement.classList.remove('is-section-animating');
-      clearTimeout(unlockTimer);
-
-      if (scrollEndHandler) {
-        window.removeEventListener('scrollend', scrollEndHandler);
-        scrollEndHandler = null;
-      }
     };
+
+    const easeInOutQuint = t =>
+      t < 0.5
+        ? 16 * t * t * t * t * t
+        : 1 - Math.pow(-2 * t + 2, 5) / 2;
 
     const moveTo = section => {
       if (!section || animating) return;
@@ -194,27 +191,42 @@ export default function HomePage() {
         '(prefers-reduced-motion: reduce)'
       ).matches;
 
-      animating = true;
-      document.documentElement.classList.add('is-section-animating');
+      const startY = window.scrollY;
+      const targetY =
+        startY + section.getBoundingClientRect().top;
+      const distance = targetY - startY;
 
-      section.scrollIntoView({
-        behavior: reduceMotion ? 'auto' : 'smooth',
-        block: 'start'
-      });
+      if (Math.abs(distance) < 2) return;
 
       if (reduceMotion) {
-        finishTransition();
+        window.scrollTo(0, targetY);
         return;
       }
 
-      if ('onscrollend' in window) {
-        scrollEndHandler = finishTransition;
-        window.addEventListener('scrollend', scrollEndHandler, {
-          once: true
-        });
-      }
+      animating = true;
+      document.documentElement.classList.add('is-section-animating');
 
-      unlockTimer = window.setTimeout(finishTransition, 950);
+      const duration = Math.min(
+        680,
+        Math.max(500, 480 + Math.abs(distance) * 0.08)
+      );
+      const startedAt = performance.now();
+
+      const frame = now => {
+        const progress = Math.min(1, (now - startedAt) / duration);
+        const eased = easeInOutQuint(progress);
+
+        window.scrollTo(0, startY + distance * eased);
+
+        if (progress < 1) {
+          transitionRaf = requestAnimationFrame(frame);
+        } else {
+          window.scrollTo(0, targetY);
+          finishTransition();
+        }
+      };
+
+      transitionRaf = requestAnimationFrame(frame);
     };
 
     const getCurrentIndex = sections => {
@@ -233,34 +245,37 @@ export default function HomePage() {
       return closestIndex;
     };
 
+    const moveByDirection = direction => {
+      const sections = getSections();
+      if (sections.length !== 3 || animating) return;
+
+      const currentIndex = getCurrentIndex(sections);
+      const nextIndex = Math.max(
+        0,
+        Math.min(sections.length - 1, currentIndex + direction)
+      );
+
+      if (nextIndex !== currentIndex) {
+        moveTo(sections[nextIndex]);
+      }
+    };
+
     const onWheel = event => {
       const verticalIntent =
         Math.abs(event.deltaY) >= Math.abs(event.deltaX);
 
-      if (!verticalIntent || Math.abs(event.deltaY) < 3) return;
-
-      const sections = getSections();
-      if (sections.length !== 3) return;
-
-      if (animating) {
-        event.preventDefault();
-        return;
-      }
-
-      const currentIndex = getCurrentIndex(sections);
-      const nextIndex =
-        event.deltaY > 0
-          ? Math.min(sections.length - 1, currentIndex + 1)
-          : Math.max(0, currentIndex - 1);
-
-      if (nextIndex === currentIndex) return;
+      if (!verticalIntent || Math.abs(event.deltaY) < 4) return;
 
       event.preventDefault();
-      moveTo(sections[nextIndex]);
+
+      if (animating) return;
+
+      moveByDirection(event.deltaY > 0 ? 1 : -1);
     };
 
     const onTouchStart = event => {
       if (event.touches.length !== 1) return;
+      if (event.target.closest?.('.swipe-toast')) return;
 
       touchStartX = event.touches[0].clientX;
       touchStartY = event.touches[0].clientY;
@@ -270,39 +285,36 @@ export default function HomePage() {
 
     const onTouchMove = event => {
       if (event.touches.length !== 1 || touchHandled) return;
+      if (event.target.closest?.('.swipe-toast')) return;
 
       const x = event.touches[0].clientX;
       const y = event.touches[0].clientY;
       const dx = x - touchStartX;
       const dy = y - touchStartY;
 
-      if (!touchAxis && Math.max(Math.abs(dx), Math.abs(dy)) >= 8) {
+      if (!touchAxis && Math.max(Math.abs(dx), Math.abs(dy)) >= 7) {
         touchAxis = Math.abs(dy) > Math.abs(dx) ? 'y' : 'x';
       }
 
-      if (touchAxis !== 'y' || Math.abs(dy) < 44) return;
+      if (touchAxis !== 'y') return;
+
+      // Stop native scrolling as soon as the gesture is known to be vertical.
+      // This prevents the small pre-scroll jump before our section animation.
+      event.preventDefault();
+
+      if (animating || Math.abs(dy) < 30) return;
 
       const sections = getSections();
       if (sections.length !== 3) return;
 
       const currentIndex = getCurrentIndex(sections);
+      const direction = dy < 0 ? 1 : -1;
+      const nextIndex = Math.max(
+        0,
+        Math.min(sections.length - 1, currentIndex + direction)
+      );
 
-      let nextIndex = currentIndex;
-
-      if (currentIndex === 1) {
-        // Gallery: horizontal gestures remain gallery drag.
-        // Vertical swipe moves between sections.
-        nextIndex = dy < 0 ? 2 : 0;
-      } else if (currentIndex === 2 && dy > 0) {
-        // Third screen: downward finger movement returns to gallery.
-        nextIndex = 1;
-      } else {
-        return;
-      }
-
-      event.preventDefault();
-
-      if (animating || nextIndex === currentIndex) return;
+      if (nextIndex === currentIndex) return;
 
       touchHandled = true;
       moveTo(sections[nextIndex]);
@@ -314,26 +326,17 @@ export default function HomePage() {
     };
 
     const onKeyDown = event => {
-      if (!['PageDown', 'PageUp'].includes(event.key)) return;
-
-      const sections = getSections();
-      if (sections.length !== 3) return;
-
-      if (animating) {
-        event.preventDefault();
+      if (!['PageDown', 'PageUp', 'ArrowDown', 'ArrowUp'].includes(event.key)) {
         return;
       }
 
-      const currentIndex = getCurrentIndex(sections);
-      const nextIndex =
-        event.key === 'PageDown'
-          ? Math.min(sections.length - 1, currentIndex + 1)
-          : Math.max(0, currentIndex - 1);
-
-      if (nextIndex === currentIndex) return;
-
       event.preventDefault();
-      moveTo(sections[nextIndex]);
+
+      if (animating) return;
+
+      moveByDirection(
+        event.key === 'PageDown' || event.key === 'ArrowDown' ? 1 : -1
+      );
     };
 
     window.addEventListener('wheel', onWheel, { passive: false });
@@ -344,11 +347,7 @@ export default function HomePage() {
     window.addEventListener('keydown', onKeyDown);
 
     return () => {
-      clearTimeout(unlockTimer);
-
-      if (scrollEndHandler) {
-        window.removeEventListener('scrollend', scrollEndHandler);
-      }
+      if (transitionRaf) cancelAnimationFrame(transitionRaf);
 
       document.documentElement.classList.remove('is-section-animating');
       window.removeEventListener('wheel', onWheel);
