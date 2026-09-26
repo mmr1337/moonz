@@ -151,12 +151,14 @@ export default function Ferrofluid({
     const container = containerRef.current;
     if (!container) return;
 
+    let renderDpr = Math.min(window.devicePixelRatio || 1, 2);
+
     const renderer = new Renderer({
       alpha: true,
       antialias: false,
       depth: false,
       stencil: false,
-      dpr: Math.min(window.devicePixelRatio || 1, 2),
+      dpr: renderDpr,
       powerPreference: 'high-performance'
     });
 
@@ -199,10 +201,19 @@ export default function Ferrofluid({
     const resize = (force = false) => {
       const width = Math.max(1, Math.round(container.clientWidth || 1));
       const height = Math.max(1, Math.round(container.clientHeight || 1));
-      if (!force && width === viewWidth && height === viewHeight) return;
+      const nextDpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dprChanged = Math.abs(nextDpr - renderDpr) > 0.01;
+
+      if (!force && !dprChanged && width === viewWidth && height === viewHeight) return;
 
       viewWidth = width;
       viewHeight = height;
+
+      if (dprChanged) {
+        renderDpr = nextDpr;
+        renderer.dpr = renderDpr;
+      }
+
       renderer.setSize(viewWidth, viewHeight);
       uniforms.iResolution.value = [
         gl.drawingBufferWidth,
@@ -211,8 +222,19 @@ export default function Ferrofluid({
       ];
     };
 
-    const ro = new ResizeObserver(() => resize());
+    let resizeRaf = 0;
+    const scheduleResize = () => {
+      if (resizeRaf) return;
+      resizeRaf = requestAnimationFrame(() => {
+        resizeRaf = 0;
+        resize();
+      });
+    };
+
+    const ro = new ResizeObserver(scheduleResize);
     ro.observe(container);
+    window.addEventListener('resize', scheduleResize, { passive: true });
+    window.visualViewport?.addEventListener('resize', scheduleResize, { passive: true });
     resize(true);
 
     let raf = 0;
@@ -273,7 +295,10 @@ export default function Ferrofluid({
 
     return () => {
       stop();
+      if (resizeRaf) cancelAnimationFrame(resizeRaf);
       ro.disconnect();
+      window.removeEventListener('resize', scheduleResize);
+      window.visualViewport?.removeEventListener('resize', scheduleResize);
       io.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
       if (canvas.parentElement === container) container.removeChild(canvas);
