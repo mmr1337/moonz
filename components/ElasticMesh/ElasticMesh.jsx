@@ -381,7 +381,6 @@ const ElasticMesh = ({
       program.uniforms.uRes.value = [viewWidth, viewHeight];
       refreshBase();
       refreshPointerRect();
-      accTime = 0;
       prevPos.set(pos);
       wakeRef.current();
     }
