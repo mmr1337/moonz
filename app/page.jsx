@@ -7,6 +7,7 @@ import CircularGallery from '../components/CircularGallery/CircularGallery';
 import HeroBrand from '../components/HeroBrand/HeroBrand';
 import BranchedMenu from '../components/BranchedMenu/BranchedMenu';
 import LatticeLoader from '../components/LatticeLoader/LatticeLoader';
+import SwipeToast from '../components/SwipeToast/SwipeToast';
 
 const previewImage = '/preview.png';
 
@@ -105,6 +106,8 @@ export default function HomePage() {
 
   const [selectedScript, setSelectedScript] = useState('death-ball');
   const [copiedScript, setCopiedScript] = useState('');
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastKey, setToastKey] = useState(0);
 
   const selectScript = value => {
     setSelectedScript(value);
@@ -144,6 +147,8 @@ export default function HomePage() {
     if (!copied) return;
 
     setCopiedScript(key);
+    setToastOpen(true);
+    setToastKey(previous => previous + 1);
 
     copiedTimerRef.current = window.setTimeout(() => {
       setCopiedScript('');
@@ -338,6 +343,30 @@ export default function HomePage() {
           interactive
         />
       </section>
+
+      <SwipeToast
+        key={toastKey}
+        title="Script"
+        description="Copied!"
+        actionLabel="Close"
+        open={toastOpen}
+        onAction={() => setToastOpen(false)}
+        onClose={() => setToastOpen(false)}
+        background="#27272a"
+        color="#f5f5f5"
+        fuseColor="#10b981"
+        width={356}
+        radius={12}
+        slideMs={400}
+        settleBounce={0.2}
+        swipeDistance={40}
+        duration={4000}
+        fuse="bottom"
+        pauseOnHover
+        closeButton={false}
+        inline={false}
+        dismissible
+      />
 
       <section ref={menuRef} className="menu-section">
         <div className="menu-shell">
