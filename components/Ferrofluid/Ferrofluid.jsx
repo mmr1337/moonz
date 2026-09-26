@@ -153,7 +153,7 @@ export default function Ferrofluid({
 
     const renderer = new Renderer({
       alpha: true,
-      antialias: true,
+      antialias: false,
       depth: false,
       stencil: false,
       dpr: Math.min(window.devicePixelRatio || 1, 2),

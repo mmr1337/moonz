@@ -325,6 +325,8 @@ const ElasticMesh = ({
     const baseX = new Float32Array(nodeCount);
     const baseY = new Float32Array(nodeCount);
     const pos = new Float32Array(nodeCount * 3);
+    const prevPos = new Float32Array(nodeCount * 3);
+    const renderPos = new Float32Array(nodeCount * 3);
     const vel = new Float32Array(nodeCount * 3);
     const accel = new Float32Array(nodeCount * 3);
 
@@ -427,7 +429,10 @@ const ElasticMesh = ({
       rectDirty = true;
     };
 
-    container.addEventListener('pointermove', onPointerMove, { passive: true });
+    const pointerMoveEvent =
+      'onpointerrawupdate' in window ? 'pointerrawupdate' : 'pointermove';
+
+    container.addEventListener(pointerMoveEvent, onPointerMove, { passive: true });
     container.addEventListener('pointerenter', onPointerEnter, { passive: true });
     container.addEventListener('pointerleave', onPointerLeave, { passive: true });
     container.addEventListener('pointerdown', onPointerDown);
@@ -435,13 +440,15 @@ const ElasticMesh = ({
     window.addEventListener('scroll', onScroll, { passive: true });
 
     const STEP = 1 / 120;
-    const MAX_SUB = 5;
+    const MAX_SUB = 8;
     let accTime = 0;
     let last = performance.now();
     let sleepFrames = 0;
     let motionScore = 0;
 
     function substep() {
+      prevPos.set(pos);
+
       const p = propsRef.current;
       const s = p.stiffness;
       const retain = 1 - p.damping;
@@ -533,11 +540,17 @@ const ElasticMesh = ({
       }
     }
 
-    function commit() {
+    function commit(alpha) {
+      const blend = Math.max(0, Math.min(1, alpha));
+
+      for (let k = 0; k < renderPos.length; k++) {
+        renderPos[k] = prevPos[k] + (pos[k] - prevPos[k]) * blend;
+      }
+
       const needNormals = propsRef.current.shading > 0.0001;
 
       if (!needNormals) {
-        aOffset.set(pos);
+        aOffset.set(renderPos);
         geometry.attributes.aOffset.needsUpdate = true;
         return;
       }
@@ -546,52 +559,52 @@ const ElasticMesh = ({
         for (let i = 0; i < N; i++) {
           const idx = j * N + i;
           const o3 = idx * 3;
-          if (needNormals) {
-            const iL = i > 0 ? idx - 1 : idx;
-            const iR = i < N - 1 ? idx + 1 : idx;
-            const iD = j > 0 ? idx - N : idx;
-            const iU = j < N - 1 ? idx + N : idx;
 
-            const lx = baseX[iL] + pos[iL * 3];
-            const ly = baseY[iL] + pos[iL * 3 + 1];
-            const lz = pos[iL * 3 + 2];
-            const rx = baseX[iR] + pos[iR * 3];
-            const ry = baseY[iR] + pos[iR * 3 + 1];
-            const rz = pos[iR * 3 + 2];
-            const dx = baseX[iD] + pos[iD * 3];
-            const dy = baseY[iD] + pos[iD * 3 + 1];
-            const dz = pos[iD * 3 + 2];
-            const ux = baseX[iU] + pos[iU * 3];
-            const uy = baseY[iU] + pos[iU * 3 + 1];
-            const uz = pos[iU * 3 + 2];
+          const iL = i > 0 ? idx - 1 : idx;
+          const iR = i < N - 1 ? idx + 1 : idx;
+          const iD = j > 0 ? idx - N : idx;
+          const iU = j < N - 1 ? idx + N : idx;
 
-            const txx = rx - lx;
-            const txy = ry - ly;
-            const txz = rz - lz;
-            const tyx = ux - dx;
-            const tyy = uy - dy;
-            const tyz = uz - dz;
+          const lx = baseX[iL] + renderPos[iL * 3];
+          const ly = baseY[iL] + renderPos[iL * 3 + 1];
+          const lz = renderPos[iL * 3 + 2];
+          const rx = baseX[iR] + renderPos[iR * 3];
+          const ry = baseY[iR] + renderPos[iR * 3 + 1];
+          const rz = renderPos[iR * 3 + 2];
+          const dx = baseX[iD] + renderPos[iD * 3];
+          const dy = baseY[iD] + renderPos[iD * 3 + 1];
+          const dz = renderPos[iD * 3 + 2];
+          const ux = baseX[iU] + renderPos[iU * 3];
+          const uy = baseY[iU] + renderPos[iU * 3 + 1];
+          const uz = renderPos[iU * 3 + 2];
 
-            let nx = txy * tyz - txz * tyy;
-            let ny = txz * tyx - txx * tyz;
-            let nz = txx * tyy - txy * tyx;
-            if (nz < 0) {
-              nx = -nx;
-              ny = -ny;
-              nz = -nz;
-            }
+          const txx = rx - lx;
+          const txy = ry - ly;
+          const txz = rz - lz;
+          const tyx = ux - dx;
+          const tyy = uy - dy;
+          const tyz = uz - dz;
 
-            const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
-            aNormal[o3] = nx / len;
-            aNormal[o3 + 1] = ny / len;
-            aNormal[o3 + 2] = nz / len;
+          let nx = txy * tyz - txz * tyy;
+          let ny = txz * tyx - txx * tyz;
+          let nz = txx * tyy - txy * tyx;
+          if (nz < 0) {
+            nx = -nx;
+            ny = -ny;
+            nz = -nz;
           }
 
-          aOffset[o3] = pos[o3];
-          aOffset[o3 + 1] = pos[o3 + 1];
-          aOffset[o3 + 2] = pos[o3 + 2];
+          const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+          aNormal[o3] = nx / len;
+          aNormal[o3 + 1] = ny / len;
+          aNormal[o3 + 2] = nz / len;
+
+          aOffset[o3] = renderPos[o3];
+          aOffset[o3 + 1] = renderPos[o3 + 1];
+          aOffset[o3 + 2] = renderPos[o3 + 2];
         }
       }
+
       geometry.attributes.aOffset.needsUpdate = true;
       geometry.attributes.aNormal.needsUpdate = true;
     }
@@ -656,7 +669,7 @@ const ElasticMesh = ({
       const p = propsRef.current;
       syncUniforms(p);
 
-      const tau = 0.06;
+      const tau = 0.012;
       const kLerp = 1 - Math.exp(-Math.max(dt, 1e-4) / tau);
       pointer.x += (pointer.tx - pointer.x) * kLerp;
       pointer.y += (pointer.ty - pointer.y) * kLerp;
@@ -671,7 +684,7 @@ const ElasticMesh = ({
       }
       if (accTime > STEP) accTime = 0;
 
-      commit();
+      commit(accTime / STEP);
       renderer.render({
         scene: mesh,
         update: false,
@@ -737,7 +750,7 @@ const ElasticMesh = ({
       io.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
       wakeRef.current = () => {};
-      container.removeEventListener('pointermove', onPointerMove);
+      container.removeEventListener(pointerMoveEvent, onPointerMove);
       container.removeEventListener('pointerenter', onPointerEnter);
       container.removeEventListener('pointerleave', onPointerLeave);
       container.removeEventListener('pointerdown', onPointerDown);
