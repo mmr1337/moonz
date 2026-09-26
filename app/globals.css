@@ -11,24 +11,62 @@ body {
 body {
   min-height: 100vh;
   background: #07090d;
+  overflow-x: hidden;
 }
 
 .page-shell {
+  min-height: 200vh;
+  background: #07090d;
+}
+
+.top-section {
+  position: relative;
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   padding: 20px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.top-background {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 1;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 68%,
+    rgba(0, 0, 0, 0.9) 78%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 68%,
+    rgba(0, 0, 0, 0.9) 78%,
+    transparent 100%
+  );
 }
 
 .mesh-wrap {
+  position: relative;
+  z-index: 1;
   width: min(900px, 100%);
   aspect-ratio: 613 / 403;
   overflow: hidden;
 }
 
+.below-fold {
+  min-height: 100vh;
+  background: #07090d;
+}
+
 @media (max-width: 640px) {
-  .page-shell {
+  .top-section {
     padding: 12px;
   }
 }
