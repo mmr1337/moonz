@@ -25,6 +25,12 @@ body::-webkit-scrollbar {
 
 html.is-section-animating {
   scroll-snap-type: none;
+  scroll-behavior: auto;
+}
+
+html.is-section-animating,
+html.is-section-animating body {
+  overscroll-behavior-y: none;
 }
 
 body {
