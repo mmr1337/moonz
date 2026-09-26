@@ -166,6 +166,10 @@ export default function HomePage() {
     let animating = false;
     let unlockTimer = 0;
     let scrollEndHandler = null;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchAxis = null;
+    let touchHandled = false;
 
     const getSections = () =>
       [topRef.current, galleryRef.current, menuRef.current].filter(Boolean);
@@ -255,6 +259,53 @@ export default function HomePage() {
       moveTo(sections[nextIndex]);
     };
 
+    const onTouchStart = event => {
+      if (event.touches.length !== 1) return;
+
+      touchStartX = event.touches[0].clientX;
+      touchStartY = event.touches[0].clientY;
+      touchAxis = null;
+      touchHandled = false;
+    };
+
+    const onTouchMove = event => {
+      if (event.touches.length !== 1 || touchHandled) return;
+
+      const x = event.touches[0].clientX;
+      const y = event.touches[0].clientY;
+      const dx = x - touchStartX;
+      const dy = y - touchStartY;
+
+      if (!touchAxis && Math.max(Math.abs(dx), Math.abs(dy)) >= 8) {
+        touchAxis = Math.abs(dy) > Math.abs(dx) ? 'y' : 'x';
+      }
+
+      if (touchAxis !== 'y' || Math.abs(dy) < 44) return;
+
+      const sections = getSections();
+      if (sections.length !== 3) return;
+
+      const currentIndex = getCurrentIndex(sections);
+
+      // Only take over vertical touch gestures on the WebGL gallery screen.
+      // Horizontal gestures continue to control CircularGallery.
+      if (currentIndex !== 1) return;
+
+      const nextIndex = dy < 0 ? 2 : 0;
+
+      event.preventDefault();
+
+      if (animating) return;
+
+      touchHandled = true;
+      moveTo(sections[nextIndex]);
+    };
+
+    const onTouchEnd = () => {
+      touchAxis = null;
+      touchHandled = false;
+    };
+
     const onKeyDown = event => {
       if (!['PageDown', 'PageUp'].includes(event.key)) return;
 
@@ -279,6 +330,10 @@ export default function HomePage() {
     };
 
     window.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', onTouchEnd, { passive: true });
     window.addEventListener('keydown', onKeyDown);
 
     return () => {
@@ -290,6 +345,10 @@ export default function HomePage() {
 
       document.documentElement.classList.remove('is-section-animating');
       window.removeEventListener('wheel', onWheel);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('touchcancel', onTouchEnd);
       window.removeEventListener('keydown', onKeyDown);
     };
   }, []);
