@@ -355,66 +355,74 @@ body {
     touch-action: pan-y;
   }
 
+  .menu-section {
+    touch-action: pan-y;
+    overflow: hidden;
+  }
+
   .menu-shell {
-    top: max(12px, env(safe-area-inset-top));
-    right: 12px;
-    width: min(260px, calc(100vw - 24px));
-    transform: scale(0.86);
+    top: max(8px, env(safe-area-inset-top));
+    right: 8px;
+    width: min(210px, calc(100vw - 16px));
+    transform: scale(0.68);
     transform-origin: top right;
   }
 
   .scripts-layout {
-    align-items: flex-start;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
     width: 100%;
+    height: 100%;
     padding:
-      152px
-      12px
-      max(16px, env(safe-area-inset-bottom));
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .scripts-layout::-webkit-scrollbar {
-    display: none;
+      clamp(108px, 16svh, 132px)
+      10px
+      max(10px, env(safe-area-inset-bottom));
+    overflow: hidden;
+    overscroll-behavior: none;
   }
 
   .scripts-list {
-    justify-content: flex-start;
-    gap: 8px;
+    justify-content: center;
+    gap: clamp(4px, 0.7svh, 7px);
     width: 100%;
+    height: 100%;
+    max-height: calc(100svh - 124px);
   }
 
   .script-row {
-    grid-template-columns: 30px minmax(0, 1fr) 72px;
-    column-gap: 8px;
+    grid-template-columns: 24px minmax(0, 1fr) 52px;
+    column-gap: 7px;
     width: 100%;
-    min-height: 78px;
-    padding: 3px 0;
+    min-height: 0;
+    flex: 1 1 0;
+    max-height: 64px;
+    padding: 1px 0;
   }
 
   .script-row__loader {
-    width: 30px;
-    min-width: 30px;
-    transform: scale(0.86);
+    width: 24px;
+    min-width: 24px;
+    transform: scale(0.72);
+    transform-origin: center;
   }
 
   .script-row__code {
     min-width: 0;
+    align-self: center;
   }
 
   .lua-code {
-    font-size: clamp(8.5px, 2.55vw, 10px);
-    line-height: 1.42;
+    font-size: clamp(7.4px, 2.15vw, 8.8px);
+    line-height: 1.28;
     overflow-wrap: anywhere;
     word-break: break-word;
   }
 
   .script-row__image-frame {
-    width: 68px;
-    height: 68px;
-    padding: 2px;
+    width: 48px;
+    height: 48px;
+    padding: 1.5px;
     border-width: 1.5px;
   }
 
@@ -432,36 +440,78 @@ body {
   }
 
   .menu-shell {
-    width: min(240px, calc(100vw - 20px));
-    right: 10px;
-    transform: scale(0.78);
+    top: max(6px, env(safe-area-inset-top));
+    right: 6px;
+    width: min(190px, calc(100vw - 12px));
+    transform: scale(0.6);
   }
 
   .scripts-layout {
-    padding-top: 132px;
-    padding-inline: 10px;
+    padding:
+      clamp(94px, 14svh, 112px)
+      8px
+      max(8px, env(safe-area-inset-bottom));
+  }
+
+  .scripts-list {
+    gap: 3px;
+    max-height: calc(100svh - 104px);
   }
 
   .script-row {
-    grid-template-columns: 28px minmax(0, 1fr) 62px;
-    column-gap: 7px;
-    min-height: 70px;
+    grid-template-columns: 22px minmax(0, 1fr) 46px;
+    column-gap: 6px;
+    max-height: 58px;
   }
 
   .script-row__loader {
-    width: 28px;
-    min-width: 28px;
-    transform: scale(0.8);
+    width: 22px;
+    min-width: 22px;
+    transform: scale(0.66);
   }
 
   .script-row__image-frame {
-    width: 58px;
-    height: 58px;
+    width: 42px;
+    height: 42px;
+    padding: 1px;
   }
 
   .lua-code {
-    font-size: clamp(8px, 2.35vw, 9.2px);
-    line-height: 1.4;
+    font-size: clamp(7px, 2vw, 8.2px);
+    line-height: 1.24;
+  }
+}
+
+@media (max-height: 680px) and (max-width: 760px) {
+  .menu-shell {
+    transform: scale(0.58);
+  }
+
+  .scripts-layout {
+    padding-top: 88px;
+  }
+
+  .scripts-list {
+    max-height: calc(100svh - 96px);
+    gap: 2px;
+  }
+
+  .script-row {
+    max-height: 52px;
+  }
+
+  .script-row__image-frame {
+    width: 40px;
+    height: 40px;
+  }
+
+  .script-row__loader {
+    transform: scale(0.62);
+  }
+
+  .lua-code {
+    font-size: 7px;
+    line-height: 1.2;
   }
 }
 
