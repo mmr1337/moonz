@@ -147,20 +147,20 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  gap: clamp(10px, 1.25vh, 16px);
+  gap: clamp(14px, 1.7vh, 22px);
   width: min(1080px, 100%);
   min-width: 0;
 }
 
 .script-row {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-columns: 42px minmax(0, 800px) 116px;
   align-items: center;
-  gap: 14px;
-  width: min(100%, 1180px);
+  column-gap: 14px;
+  width: min(100%, 1040px);
   min-width: 0;
   margin: 0;
-  padding: 4px 0;
+  padding: 3px 0;
   border: 0;
   background: transparent;
   color: #d9dce5;
@@ -185,6 +185,7 @@ body {
 }
 
 .script-row__loader {
+  grid-column: 1;
   display: grid;
   place-items: center;
   width: 42px;
@@ -196,41 +197,15 @@ body {
   width: auto;
 }
 
-.script-row__content {
-  display: block;
+.script-row__code {
+  grid-column: 2;
   min-width: 0;
-}
-
-.script-row__meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 18px;
-  margin-bottom: 4px;
-}
-
-.script-row__name {
-  color: #eef0f5;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.script-row__code-line {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 18px;
-  width: fit-content;
-  max-width: 100%;
-  min-width: 0;
+  align-self: center;
 }
 
 .lua-code {
   display: block;
-  width: auto;
-  max-width: min(860px, calc(100vw - 420px));
-  flex: 0 1 auto;
+  width: 100%;
   margin: 0;
   color: #a7adba;
   font-family:
@@ -282,6 +257,9 @@ body {
 }
 
 .script-row__image-frame {
+  grid-column: 3;
+  align-self: center;
+  justify-self: center;
   position: relative;
   display: grid;
   place-items: center;
@@ -326,7 +304,7 @@ body {
   }
 
   .script-row {
-    grid-template-columns: 38px minmax(0, 1fr);
+    grid-template-columns: 38px minmax(0, 1fr) 108px;
     width: 100%;
     gap: 12px;
   }
@@ -334,14 +312,6 @@ body {
   .script-row__loader {
     width: 38px;
     min-width: 38px;
-  }
-
-  .script-row__code-line {
-    gap: 14px;
-  }
-
-  .lua-code {
-    max-width: calc(100vw - 250px);
   }
 
   .script-row__image-frame {
@@ -375,7 +345,7 @@ body {
   }
 
   .script-row {
-    grid-template-columns: 34px minmax(0, 1fr);
+    grid-template-columns: 34px minmax(0, 1fr) 96px;
     gap: 9px;
   }
 
@@ -384,22 +354,10 @@ body {
     min-width: 34px;
   }
 
-  .script-row__code-line {
-    gap: 10px;
-  }
-
-  .lua-code {
-    max-width: calc(100vw - 160px);
-  }
-
   .script-row__image-frame {
     width: 96px;
     height: 96px;
     padding: 2px;
-  }
-
-  .script-row__name {
-    font-size: 12px;
   }
 
   .lua-code {
