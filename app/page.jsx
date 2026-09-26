@@ -1,18 +1,18 @@
 import ElasticMesh from '../components/ElasticMesh/ElasticMesh';
 
+const previewImage =
+  'https://raw.githubusercontent.com/mmr1337/moonz/main/image/preview.png';
+
 export default function HomePage() {
   return (
     <main className="page-shell">
-      <div className="mesh-wrap" aria-label="Интерактивная эластичная сетка">
+      <div className="mesh-wrap" aria-label="Moon interface preview">
         <ElasticMesh
-          color1="#111827"
-          color2="#4F46E5"
-          gridColor="#FFFFFF"
-          gridOpacity={0.22}
-          gridDensity={18}
+          image={previewImage}
+          showGrid={false}
           borderRadius={28}
-          tilt={12}
-          shading={0.85}
+          tilt={8}
+          shading={0.35}
           interaction="hover"
         />
       </div>

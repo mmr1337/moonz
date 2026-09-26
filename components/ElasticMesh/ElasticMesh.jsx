@@ -68,8 +68,11 @@ uniform vec3 uGridColor;
 
 void main() {
   vec3 base;
+  float imageAlpha = 1.0;
   if (uHasImage > 0.5) {
-    base = texture2D(tMap, vUv).rgb;
+    vec4 texel = texture2D(tMap, vUv);
+    base = texel.rgb;
+    imageAlpha = texel.a;
   } else {
     base = mix(uColor1, uColor2, clamp(vUv.y, 0.0, 1.0));
   }
@@ -104,6 +107,7 @@ void main() {
   vec2 q = abs(p) - (halfRes - r);
   float sd = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
   float alpha = 1.0 - smoothstep(-1.25, 1.25, sd);
+  alpha *= imageAlpha;
   if (alpha <= 0.002) discard;
 
   gl_FragColor = vec4(lit, alpha);

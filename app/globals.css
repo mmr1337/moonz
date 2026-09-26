@@ -23,18 +23,12 @@ body {
 
 .mesh-wrap {
   width: min(900px, 100%);
-  height: clamp(300px, 54vw, 520px);
+  aspect-ratio: 613 / 403;
   overflow: hidden;
-  border-radius: 28px;
 }
 
 @media (max-width: 640px) {
   .page-shell {
     padding: 12px;
-  }
-
-  .mesh-wrap {
-    height: 330px;
-    border-radius: 20px;
   }
 }
