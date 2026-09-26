@@ -99,6 +99,7 @@ body {
 .mesh-wrap {
   position: relative;
   width: 100%;
+  pointer-events: none;
   max-height: calc(100svh - 184px);
   aspect-ratio: 613 / 403;
   overflow: hidden;
@@ -113,8 +114,9 @@ body {
 
 .menu-section {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: clamp(24px, 3vw, 48px);
   background: #07090d;
   contain: layout paint size;
   overflow: hidden;
@@ -125,7 +127,7 @@ body {
   min-height: 280px;
   display: flex;
   align-items: flex-start;
-  justify-content: center;
+  justify-content: flex-end;
 }
 
 @media (max-width: 700px) {
