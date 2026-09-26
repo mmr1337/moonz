@@ -208,12 +208,14 @@ const ElasticMesh = ({
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    let renderDpr = Math.min(window.devicePixelRatio || 1, 3);
+
     const renderer = new Renderer({
       alpha: true,
       antialias: true,
       depth: false,
       stencil: false,
-      dpr: Math.min(window.devicePixelRatio || 1, 3),
+      dpr: renderDpr,
       powerPreference: 'high-performance'
     });
     const gl = renderer.gl;
@@ -350,23 +352,54 @@ const ElasticMesh = ({
       rectDirty = false;
     }
 
+    function getTargetDpr(w, h) {
+      const deviceDpr = Math.min(window.devicePixelRatio || 1, 3);
+      const maxPixels = 3200000;
+      const pixelBudgetDpr = Math.sqrt(maxPixels / Math.max(1, w * h));
+      return Math.max(1, Math.min(deviceDpr, pixelBudgetDpr));
+    }
+
     function resize(force = false) {
       const w = Math.max(1, Math.round(container.clientWidth || 1));
       const h = Math.max(1, Math.round(container.clientHeight || 1));
-      if (!force && w === viewWidth && h === viewHeight) return;
+      const nextDpr = getTargetDpr(w, h);
+      const dprChanged = Math.abs(nextDpr - renderDpr) > 0.01;
+
+      if (!force && !dprChanged && w === viewWidth && h === viewHeight) return;
 
       viewWidth = w;
       viewHeight = h;
+
+      if (dprChanged) {
+        renderDpr = nextDpr;
+        renderer.dpr = renderDpr;
+      }
+
       renderer.setSize(viewWidth, viewHeight);
       aspect = viewWidth / viewHeight;
       program.uniforms.uAspect.value = aspect;
       program.uniforms.uRes.value = [viewWidth, viewHeight];
       refreshBase();
       refreshPointerRect();
+      accTime = 0;
+      prevPos.set(pos);
+      wakeRef.current();
     }
 
-    const ro = new ResizeObserver(() => resize());
+    let resizeRaf = 0;
+    const scheduleResize = () => {
+      rectDirty = true;
+      if (resizeRaf) return;
+      resizeRaf = requestAnimationFrame(() => {
+        resizeRaf = 0;
+        resize();
+      });
+    };
+
+    const ro = new ResizeObserver(scheduleResize);
     ro.observe(container);
+    window.addEventListener('resize', scheduleResize, { passive: true });
+    window.visualViewport?.addEventListener('resize', scheduleResize, { passive: true });
     resize(true);
 
     function toPlane(clientX, clientY) {
@@ -746,7 +779,10 @@ const ElasticMesh = ({
 
     return () => {
       stop();
+      if (resizeRaf) cancelAnimationFrame(resizeRaf);
       ro.disconnect();
+      window.removeEventListener('resize', scheduleResize);
+      window.visualViewport?.removeEventListener('resize', scheduleResize);
       io.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
       wakeRef.current = () => {};
