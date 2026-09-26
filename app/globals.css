@@ -98,7 +98,7 @@ body {
 .mesh-wrap {
   position: relative;
   width: 100%;
-  max-height: calc(100svh - 106px);
+  max-height: calc(100svh - 184px);
   aspect-ratio: 613 / 403;
   overflow: hidden;
   contain: layout paint size;
@@ -121,7 +121,7 @@ body {
   }
 
   .mesh-wrap {
-    max-height: calc(100svh - 88px);
+    max-height: calc(100svh - 148px);
   }
 }
 
