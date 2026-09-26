@@ -17,59 +17,68 @@ const galleryItems = [
   { image: '/gallery/violence-district.png', text: 'Violence District' }
 ];
 
-const easeInOutQuint = t =>
-  t < 0.5
-    ? 16 * t * t * t * t * t
-    : 1 - Math.pow(-2 * t + 2, 5) / 2;
-
 export default function HomePage() {
   const topRef = useRef(null);
   const galleryRef = useRef(null);
 
   useEffect(() => {
     let animating = false;
-    let raf = 0;
+    let unlockTimer = 0;
+    let scrollEndHandler = null;
 
     const getSections = () =>
       [topRef.current, galleryRef.current].filter(Boolean);
 
-    const animateTo = targetY => {
-      if (animating) return;
+    const finishTransition = () => {
+      if (!animating) return;
+
+      animating = false;
+      document.documentElement.classList.remove('is-section-animating');
+      clearTimeout(unlockTimer);
+
+      if (scrollEndHandler) {
+        window.removeEventListener('scrollend', scrollEndHandler);
+        scrollEndHandler = null;
+      }
+    };
+
+    const moveTo = section => {
+      if (!section || animating) return;
 
       const reduceMotion = window.matchMedia(
         '(prefers-reduced-motion: reduce)'
       ).matches;
 
-      if (reduceMotion) {
-        window.scrollTo(0, targetY);
-        return;
-      }
-
       animating = true;
       document.documentElement.classList.add('is-section-animating');
 
-      const startY = window.scrollY;
-      const distance = targetY - startY;
-      const duration = 720;
-      const startTime = performance.now();
+      section.scrollIntoView({
+        behavior: reduceMotion ? 'auto' : 'smooth',
+        block: 'start'
+      });
 
-      const frame = now => {
-        const progress = Math.min(1, (now - startTime) / duration);
-        const eased = easeInOutQuint(progress);
+      if (reduceMotion) {
+        finishTransition();
+        return;
+      }
 
-        window.scrollTo(0, startY + distance * eased);
+      if ('onscrollend' in window) {
+        scrollEndHandler = finishTransition;
+        window.addEventListener('scrollend', scrollEndHandler, {
+          once: true
+        });
+      }
 
-        if (progress < 1) {
-          raf = requestAnimationFrame(frame);
-          return;
-        }
+      unlockTimer = window.setTimeout(finishTransition, 950);
+    };
 
-        window.scrollTo(0, targetY);
-        document.documentElement.classList.remove('is-section-animating');
-        animating = false;
-      };
-
-      raf = requestAnimationFrame(frame);
+    const getCurrentIndex = sections => {
+      const viewport = window.innerHeight || 1;
+      return Math.abs(
+        sections[1].getBoundingClientRect().top
+      ) < viewport * 0.5
+        ? 1
+        : 0;
     };
 
     const onWheel = event => {
@@ -86,13 +95,7 @@ export default function HomePage() {
         return;
       }
 
-      const viewport = window.innerHeight || 1;
-      const currentIndex =
-        Math.abs(window.scrollY - sections[1].offsetTop) <
-        viewport * 0.5
-          ? 1
-          : 0;
-
+      const currentIndex = getCurrentIndex(sections);
       const nextIndex =
         event.deltaY > 0
           ? Math.min(1, currentIndex + 1)
@@ -101,27 +104,21 @@ export default function HomePage() {
       if (nextIndex === currentIndex) return;
 
       event.preventDefault();
-      animateTo(sections[nextIndex].offsetTop);
+      moveTo(sections[nextIndex]);
     };
 
     const onKeyDown = event => {
-      if (
-        !['PageDown', 'PageUp'].includes(event.key) ||
-        animating
-      ) {
-        return;
-      }
+      if (!['PageDown', 'PageUp'].includes(event.key)) return;
 
       const sections = getSections();
       if (sections.length !== 2) return;
 
-      const viewport = window.innerHeight || 1;
-      const currentIndex =
-        Math.abs(window.scrollY - sections[1].offsetTop) <
-        viewport * 0.5
-          ? 1
-          : 0;
+      if (animating) {
+        event.preventDefault();
+        return;
+      }
 
+      const currentIndex = getCurrentIndex(sections);
       const nextIndex =
         event.key === 'PageDown'
           ? Math.min(1, currentIndex + 1)
@@ -130,14 +127,19 @@ export default function HomePage() {
       if (nextIndex === currentIndex) return;
 
       event.preventDefault();
-      animateTo(sections[nextIndex].offsetTop);
+      moveTo(sections[nextIndex]);
     };
 
     window.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('keydown', onKeyDown);
 
     return () => {
-      cancelAnimationFrame(raf);
+      clearTimeout(unlockTimer);
+
+      if (scrollEndHandler) {
+        window.removeEventListener('scrollend', scrollEndHandler);
+      }
+
       document.documentElement.classList.remove('is-section-animating');
       window.removeEventListener('wheel', onWheel);
       window.removeEventListener('keydown', onKeyDown);

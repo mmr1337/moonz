@@ -621,7 +621,9 @@ const ElectricLogo = ({
       interactive,
       cursorIntensity,
       cursorRadius,
-      theme
+      theme,
+      colorRgb: hexToRgb(color),
+      glowColorRgb: hexToRgb(glowColor)
     };
   });
 
@@ -923,7 +925,7 @@ const ElectricLogo = ({
         uniforms.uHoverRadius.value = Math.max(1, s.cursorRadius);
         uniforms.uPulseBoost.value = boost;
         uniforms.uFlash.value = flash;
-        const targets = [hexToRgb(s.color), hexToRgb(s.glowColor)];
+        const targets = [s.colorRgb, s.glowColorRgb];
         const shift = settled ? 1 - Math.exp(-dt / 0.35) : 1;
         settled = true;
         for (let i = 0; i < 2; i++) {
@@ -941,7 +943,12 @@ const ElectricLogo = ({
         ink += ((s.theme === 'light' ? 1 : 0) - ink) * (1 - Math.exp(-dt / 0.25));
         uniforms.uFill.value = s.fill;
         uniforms.uInk.value = ink;
-        renderer.render({ scene: mesh });
+        renderer.render({
+          scene: mesh,
+          update: false,
+          sort: false,
+          frustumCull: false
+        });
       }
 
       if (visible) raf = requestAnimationFrame(frame);
@@ -954,6 +961,7 @@ const ElectricLogo = ({
     };
 
     const onMove = e => {
+      if (!settingsRef.current?.interactive) return;
       const rect = container.getBoundingClientRect();
       pointer.x = e.clientX - rect.left;
       pointer.y = e.clientY - rect.top;
@@ -974,13 +982,41 @@ const ElectricLogo = ({
     container.addEventListener('pointerleave', onLeave);
     container.addEventListener('pointercancel', onLeave);
 
-    const resizeObserver = new ResizeObserver(resize);
+    let resizeRaf = 0;
+    const scheduleResize = () => {
+      if (resizeRaf) return;
+      resizeRaf = requestAnimationFrame(() => {
+        resizeRaf = 0;
+        resize();
+      });
+    };
+
+    const resizeObserver = new ResizeObserver(scheduleResize);
     resizeObserver.observe(container);
-    const intersectionObserver = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting;
+    window.addEventListener('resize', scheduleResize, { passive: true });
+    window.visualViewport?.addEventListener('resize', scheduleResize, {
+      passive: true
+    });
+
+    let intersecting = true;
+    let pageVisible = !document.hidden;
+
+    const syncVisibility = () => {
+      visible = intersecting && pageVisible;
       start();
+    };
+
+    const intersectionObserver = new IntersectionObserver(([entry]) => {
+      intersecting = entry.isIntersecting;
+      syncVisibility();
     });
     intersectionObserver.observe(container);
+
+    const onVisibilityChange = () => {
+      pageVisible = !document.hidden;
+      syncVisibility();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     resize();
     start();
@@ -988,8 +1024,12 @@ const ElectricLogo = ({
     return () => {
       visible = false;
       cancelAnimationFrame(raf);
+      if (resizeRaf) cancelAnimationFrame(resizeRaf);
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
+      window.removeEventListener('resize', scheduleResize);
+      window.visualViewport?.removeEventListener('resize', scheduleResize);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       container.removeEventListener('pointermove', onMove);
       container.removeEventListener('pointerdown', onDown);
       container.removeEventListener('pointerleave', onLeave);

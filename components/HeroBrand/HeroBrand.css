@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(18px, 2.2vw, 34px);
+  gap: 0;
   width: min(900px, 96vw);
   height: clamp(190px, 21vw, 250px);
   flex: 0 0 auto;
@@ -15,6 +15,7 @@
   width: clamp(250px, 23vw, 320px);
   height: clamp(250px, 23vw, 320px);
   flex: 0 0 auto;
+  margin-right: clamp(-96px, -5.5vw, -72px);
 }
 
 .hero-brand__logo .electric-logo {
@@ -40,12 +41,13 @@
   .hero-brand {
     width: min(760px, 96vw);
     height: clamp(150px, 24vw, 210px);
-    gap: 14px;
+    gap: 0;
   }
 
   .hero-brand__logo {
     width: clamp(190px, 27vw, 250px);
     height: clamp(190px, 27vw, 250px);
+    margin-right: clamp(-72px, -7vw, -52px);
   }
 
   .hero-brand__wordmark {
@@ -61,12 +63,13 @@
   .hero-brand {
     width: min(560px, 98vw);
     height: clamp(120px, 31vw, 170px);
-    gap: 8px;
+    gap: 0;
   }
 
   .hero-brand__logo {
     width: clamp(145px, 32vw, 190px);
     height: clamp(145px, 32vw, 190px);
+    margin-right: clamp(-52px, -8vw, -34px);
   }
 
   .hero-brand__wordmark {
