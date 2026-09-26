@@ -404,11 +404,13 @@ class App {
       borderRadius = 0,
       font = 'bold 30px Figtree',
       scrollSpeed = 2,
-      scrollEase = 0.05
+      scrollEase = 0.05,
+      interactive = true
     } = {}
   ) {
     document.documentElement.classList.remove('no-js');
     this.container = container;
+    this.interactive = interactive;
     this.scrollSpeed = scrollSpeed;
     this.scroll = { ease: scrollEase, current: 0, target: 0, last: 0 };
     this.onCheckDebounce = debounce(this.onCheck, 200);
@@ -641,12 +643,14 @@ class App {
     window.addEventListener('resize', this.boundScheduleResize, { passive: true });
     window.visualViewport?.addEventListener('resize', this.boundScheduleResize, { passive: true });
 
-    this.container.addEventListener('wheel', this.boundOnWheel, { passive: true });
-    this.container.addEventListener('pointerdown', this.boundOnTouchDown);
-    this.container.addEventListener('pointermove', this.boundOnTouchMove, { passive: true });
-    this.container.addEventListener('pointerup', this.boundOnTouchUp, { passive: true });
-    this.container.addEventListener('pointercancel', this.boundOnTouchUp, { passive: true });
-    this.container.addEventListener('keydown', this.boundOnKeyDown);
+    if (this.interactive) {
+      this.container.addEventListener('wheel', this.boundOnWheel, { passive: true });
+      this.container.addEventListener('pointerdown', this.boundOnTouchDown);
+      this.container.addEventListener('pointermove', this.boundOnTouchMove, { passive: true });
+      this.container.addEventListener('pointerup', this.boundOnTouchUp, { passive: true });
+      this.container.addEventListener('pointercancel', this.boundOnTouchUp, { passive: true });
+      this.container.addEventListener('keydown', this.boundOnKeyDown);
+    }
 
     this.boundVisibility = () => {
       this.pageVisible = !document.hidden;
@@ -676,12 +680,14 @@ class App {
     window.removeEventListener('resize', this.boundScheduleResize);
     window.visualViewport?.removeEventListener('resize', this.boundScheduleResize);
 
-    this.container.removeEventListener('wheel', this.boundOnWheel);
-    this.container.removeEventListener('pointerdown', this.boundOnTouchDown);
-    this.container.removeEventListener('pointermove', this.boundOnTouchMove);
-    this.container.removeEventListener('pointerup', this.boundOnTouchUp);
-    this.container.removeEventListener('pointercancel', this.boundOnTouchUp);
-    this.container.removeEventListener('keydown', this.boundOnKeyDown);
+    if (this.interactive) {
+      this.container.removeEventListener('wheel', this.boundOnWheel);
+      this.container.removeEventListener('pointerdown', this.boundOnTouchDown);
+      this.container.removeEventListener('pointermove', this.boundOnTouchMove);
+      this.container.removeEventListener('pointerup', this.boundOnTouchUp);
+      this.container.removeEventListener('pointercancel', this.boundOnTouchUp);
+      this.container.removeEventListener('keydown', this.boundOnKeyDown);
+    }
     document.removeEventListener('visibilitychange', this.boundVisibility);
 
     if (this.renderer?.gl?.canvas?.parentNode) {
@@ -700,7 +706,8 @@ export default function CircularGallery({
   font = 'bold 30px Figtree',
   fontUrl,
   scrollSpeed = 2,
-  scrollEase = 0.05
+  scrollEase = 0.05,
+  interactive = true
 }) {
   const containerRef = useRef(null);
   useEffect(() => {
@@ -716,7 +723,8 @@ export default function CircularGallery({
         borderRadius,
         font: resolvedFont,
         scrollSpeed,
-        scrollEase
+        scrollEase,
+        interactive
       });
     });
 
@@ -724,14 +732,28 @@ export default function CircularGallery({
       isMounted = false;
       if (app) app.destroy();
     };
-  }, [items, bend, textColor, borderRadius, font, fontUrl, scrollSpeed, scrollEase]);
+  }, [
+    items,
+    bend,
+    textColor,
+    borderRadius,
+    font,
+    fontUrl,
+    scrollSpeed,
+    scrollEase,
+    interactive
+  ]);
   return (
     <div
-      className="circular-gallery"
+      className={`circular-gallery${interactive ? '' : ' circular-gallery--static'}`}
       ref={containerRef}
-      tabIndex={0}
+      tabIndex={interactive ? 0 : -1}
       role="region"
-      aria-label="Circular image gallery. Use left and right arrow keys to navigate."
+      aria-label={
+        interactive
+          ? 'Circular image gallery. Use left and right arrow keys to navigate.'
+          : 'Script preview gallery.'
+      }
     />
   );
 }
