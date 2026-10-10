@@ -13,7 +13,7 @@ const games = [
   { id: '6aff1732647e82be5eeb8ebb108710a1', name: 'Last Contract (Tower Defense)', image: null }
 ];
 
-const launcher = 'loadstring(game:HttpGet("https://www.usemoon.pro/loader.lua"))()';
+const launcherFor = id => `moon_selected_id="${id}";loadstring(game:HttpGet("https://www.usemoon.pro/loader.lua"))()`;
 
 async function copyText(value) {
   try {
@@ -45,6 +45,7 @@ export default function MoonLoader() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [copyState, setCopyState] = useState('');
   const active = games[activeIndex];
+  const launcher = launcherFor(active.id);
 
   useEffect(() => {
     if (!open) return;
