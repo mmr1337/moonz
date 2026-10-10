@@ -139,7 +139,20 @@ new("UIListLayout", {
     SortOrder = Enum.SortOrder.LayoutOrder
 }, list)
 
+local globalEnv = (type(getgenv) == "function" and getgenv()) or _G
+local preselected = tostring(globalEnv.moon_selected_id or moon_selected_id or "")
 local selectedIndex = 1
+
+for index, entry in ipairs(scripts) do
+    if entry.id == preselected then
+        selectedIndex = index
+        break
+    end
+end
+
+globalEnv.moon_selected_id = nil
+moon_selected_id = nil
+
 local buttons = {}
 
 local function renderSelection()
@@ -188,7 +201,6 @@ new("TextLabel", {
     TextXAlignment = Enum.TextXAlignment.Left
 }, container)
 
-local globalEnv = (type(getgenv) == "function" and getgenv()) or _G
 local initialKey = type(globalEnv.script_key) == "string" and globalEnv.script_key or ""
 
 local keyBox = new("TextBox", {
@@ -269,6 +281,7 @@ launchButton.Activated:Connect(function()
         return
     end
 
+    local chosen = scripts[selectedIndex]
     busy = true
     launchButton.Text = "Checking key..."
     launchButton.BackgroundColor3 = Color3.fromRGB(74, 76, 108)
@@ -284,7 +297,7 @@ launchButton.Activated:Connect(function()
         if not ok or type(api) ~= "table" then
             setStatus("Failed to load Luarmor SDK.", Color3.fromRGB(255, 129, 137))
         else
-            api.script_id = scripts[selectedIndex].id
+            api.script_id = chosen.id
 
             local checked, status = pcall(function()
                 return api.check_key(key)
@@ -303,7 +316,7 @@ launchButton.Activated:Connect(function()
                 _G.script_key = key
                 script_key = key
 
-                setStatus("Key valid. Loading " .. scripts[selectedIndex].name .. "...", green)
+                setStatus("Key valid. Loading " .. chosen.name .. "...", green)
 
                 local launched, reason = pcall(function()
                     api.load_script()
