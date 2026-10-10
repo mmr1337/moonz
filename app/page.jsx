@@ -8,6 +8,7 @@ import HeroBrand from '../components/HeroBrand/HeroBrand';
 import BranchedMenu from '../components/BranchedMenu/BranchedMenu';
 import LatticeLoader from '../components/LatticeLoader/LatticeLoader';
 import SwipeToast from '../components/SwipeToast/SwipeToast';
+import MoonLoader from '../components/MoonLoader/MoonLoader';
 
 const previewImage = '/preview.png';
 
@@ -261,6 +262,7 @@ export default function HomePage() {
     };
 
     const onWheel = event => {
+      if (document.documentElement.classList.contains('moon-loader-is-open')) return;
       const verticalIntent =
         Math.abs(event.deltaY) >= Math.abs(event.deltaX);
 
@@ -274,6 +276,7 @@ export default function HomePage() {
     };
 
     const onTouchStart = event => {
+      if (document.documentElement.classList.contains('moon-loader-is-open')) return;
       if (event.touches.length !== 1) return;
       if (event.target.closest?.('.swipe-toast')) return;
 
@@ -284,6 +287,7 @@ export default function HomePage() {
     };
 
     const onTouchMove = event => {
+      if (document.documentElement.classList.contains('moon-loader-is-open')) return;
       if (event.touches.length !== 1 || touchHandled) return;
       if (event.target.closest?.('.swipe-toast')) return;
 
@@ -326,6 +330,7 @@ export default function HomePage() {
     };
 
     const onKeyDown = event => {
+      if (document.documentElement.classList.contains('moon-loader-is-open')) return;
       if (!['PageDown', 'PageUp', 'ArrowDown', 'ArrowUp'].includes(event.key)) {
         return;
       }
@@ -361,6 +366,7 @@ export default function HomePage() {
 
   return (
     <main className="page-shell">
+      <MoonLoader />
       <section ref={topRef} className="top-section">
         <div className="top-background" aria-hidden="true">
           <Ferrofluid
