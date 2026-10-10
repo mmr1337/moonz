@@ -5,68 +5,44 @@
 html,
 body {
   margin: 0;
+  width: 100%;
   min-height: 100%;
   background: #07090d;
+  overflow: hidden;
 }
 
 html {
-  scroll-snap-type: y mandatory;
-  scroll-behavior: auto;
   scrollbar-width: none;
-  -ms-overflow-style: none;
 }
 
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
-  width: 0;
-  height: 0;
   display: none;
 }
 
-html.is-section-animating {
-  scroll-snap-type: none;
-  scroll-behavior: auto;
-}
-
-html.is-section-animating,
-html.is-section-animating body {
-  overscroll-behavior-y: none;
-}
-
 body {
-  min-height: 100vh;
   min-height: 100svh;
-  background: #07090d;
   overflow-x: hidden;
-  scrollbar-width: none;
 }
 
 .page-shell {
-  min-height: 300vh;
-  min-height: 300svh;
-  background: #07090d;
-}
-
-.top-section,
-.gallery-section,
-.menu-section {
   width: 100%;
-  height: 100vh;
-  height: 100svh;
-  min-height: 100vh;
   min-height: 100svh;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
+  height: 100svh;
+  overflow: hidden;
+  background: #07090d;
 }
 
 .top-section {
   position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: clamp(12px, 2vw, 20px);
-  overflow: hidden;
   isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding: 16px;
 }
 
 .top-background {
@@ -74,6 +50,7 @@ body {
   inset: 0;
   z-index: -1;
   pointer-events: none;
+  overflow: hidden;
   contain: strict;
   -webkit-mask-image: linear-gradient(
     to bottom,
@@ -95,438 +72,22 @@ body {
   position: relative;
   z-index: 1;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(6px, 1vh, 12px);
-  width: min(900px, 100%);
-  max-height: calc(100svh - clamp(24px, 4vw, 40px));
-}
-
-.mesh-wrap {
-  position: relative;
-  width: 100%;
-  pointer-events: none;
-  max-height: calc(100svh - 184px);
-  aspect-ratio: 613 / 403;
-  overflow: hidden;
-  contain: layout paint size;
-}
-
-.gallery-section {
-  background: #07090d;
-  contain: layout paint size;
-  overflow: hidden;
-}
-
-.menu-section {
-  position: relative;
-  background: #07090d;
-  contain: layout paint size;
-  overflow: hidden;
-}
-
-.menu-shell {
-  position: absolute;
-  top: clamp(24px, 3vw, 48px);
-  right: clamp(24px, 3vw, 48px);
-  z-index: 3;
-  width: min(320px, calc(100vw - 48px));
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-}
-
-.scripts-layout {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  width: min(1280px, calc(100vw - 96px));
-  height: 100%;
-  margin: 0 auto;
-  padding: clamp(118px, 12vh, 154px) 0 clamp(42px, 6vh, 72px);
-}
-
-.scripts-list {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  gap: clamp(14px, 1.7vh, 22px);
-  width: min(1080px, 100%);
-  min-width: 0;
-}
-
-.script-row {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 800px) 116px;
   align-items: center;
-  column-gap: 14px;
-  width: min(100%, 1040px);
-  min-width: 0;
-  margin: 0;
-  padding: 3px 0;
-  border: 0;
-  background: transparent;
-  color: #d9dce5;
-  text-align: left;
-  cursor: pointer;
-  font: inherit;
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.script-row:hover,
-.script-row:active,
-.script-row.is-selected,
-.script-row.is-copied {
-  background: transparent;
-}
-
-.script-row:focus-visible {
-  outline: 1px solid rgba(121, 121, 255, 0.62);
-  outline-offset: 7px;
-  border-radius: 10px;
-}
-
-.script-row__loader {
-  grid-column: 1;
-  display: grid;
-  place-items: center;
-  width: 42px;
-  min-width: 42px;
-  pointer-events: none;
-}
-
-.script-row__loader .lattice-loader {
-  width: auto;
-}
-
-.script-row__code {
-  grid-column: 2;
-  min-width: 0;
-  align-self: center;
-}
-
-.lua-code {
-  display: block;
   width: 100%;
-  margin: 0;
-  color: #a7adba;
-  font-family:
-    ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    Monaco,
-    Consolas,
-    'Liberation Mono',
-    monospace;
-  font-size: clamp(10.5px, 0.72vw, 12.5px);
-  line-height: 1.55;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  opacity: 0.72;
-  transition:
-    opacity 160ms ease,
-    filter 160ms ease;
+  max-width: 960px;
+  min-width: 0;
 }
 
-.lua-code.is-selected {
-  opacity: 1;
-  filter: saturate(1.12);
-}
-
-.lua-fn {
-  color: #7dd3fc;
-}
-
-.lua-global {
-  color: #93c5fd;
-}
-
-.lua-operator {
-  color: #f8fafc;
-}
-
-.lua-method {
-  color: #67e8f9;
-}
-
-.lua-string {
-  color: #f0a57a;
-}
-
-.lua-paren {
-  color: #facc15;
-}
-
-.script-row__image-frame {
-  grid-column: 3;
-  align-self: center;
-  justify-self: center;
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 116px;
-  height: 116px;
-  padding: 3px;
-  border: 2px solid rgba(255, 255, 255, 0.16);
-  border-radius: 50%;
-  background: transparent;
-  overflow: hidden;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease,
-    transform 180ms ease;
-}
-
-.script-row__image-frame.is-selected {
-  border-color: #7979ff;
-  box-shadow:
-    0 0 0 3px rgba(121, 121, 255, 0.1),
-    0 0 18px rgba(121, 121, 255, 0.22);
-  transform: scale(1.04);
-}
-
-.script-row__image {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-  user-select: none;
-}
-
-@media (max-width: 1100px) {
-  .scripts-layout {
-    width: calc(100vw - 40px);
-    padding-top: 118px;
-  }
-
-  .scripts-list {
-    width: 100%;
-  }
-
-  .script-row {
-    grid-template-columns: 38px minmax(0, 1fr) 108px;
-    width: 100%;
-    gap: 12px;
-  }
-
-  .script-row__loader {
-    width: 38px;
-    min-width: 38px;
-  }
-
-  .script-row__image-frame {
-    width: 108px;
-    height: 108px;
-  }
-}
-
-@media (max-width: 760px) {
-  html {
-    scroll-snap-type: y mandatory;
-  }
-
-  body {
-    overscroll-behavior-y: none;
-  }
-
+@media (max-width: 700px) {
   .top-section {
-    align-items: center;
-    padding:
-      max(10px, env(safe-area-inset-top))
-      10px
-      max(10px, env(safe-area-inset-bottom));
-  }
-
-  .top-stack {
-    justify-content: center;
-    gap: clamp(2px, 0.8vh, 8px);
-    width: 100%;
-    height: 100%;
-    max-height: none;
-  }
-
-  .mesh-wrap {
-    width: min(94vw, 620px);
-    max-height: min(52svh, 430px);
-    flex: 0 1 auto;
-  }
-
-  .gallery-section {
-    touch-action: pan-y;
-  }
-
-  .menu-section {
-    touch-action: pan-y;
-    overflow: hidden;
-  }
-
-  .menu-shell {
-    top: max(8px, env(safe-area-inset-top));
-    right: 8px;
-    width: min(210px, calc(100vw - 16px));
-    transform: scale(0.68);
-    transform-origin: top right;
-  }
-
-  .scripts-layout {
-    inset: 0;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    padding:
-      clamp(108px, 16svh, 132px)
-      10px
-      max(10px, env(safe-area-inset-bottom));
-    overflow: hidden;
-    overscroll-behavior: none;
-  }
-
-  .scripts-list {
-    justify-content: center;
-    gap: clamp(4px, 0.7svh, 7px);
-    width: 100%;
-    height: 100%;
-    max-height: calc(100svh - 124px);
-  }
-
-  .script-row {
-    grid-template-columns: 24px minmax(0, 1fr) 52px;
-    column-gap: 7px;
-    width: 100%;
-    min-height: 0;
-    flex: 1 1 0;
-    max-height: 64px;
-    padding: 1px 0;
-  }
-
-  .script-row__loader {
-    width: 24px;
-    min-width: 24px;
-    transform: scale(0.72);
-    transform-origin: center;
-  }
-
-  .script-row__code {
-    min-width: 0;
-    align-self: center;
-  }
-
-  .lua-code {
-    font-size: clamp(7.4px, 2.15vw, 8.8px);
-    line-height: 1.28;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-  }
-
-  .script-row__image-frame {
-    width: 48px;
-    height: 48px;
-    padding: 1.5px;
-    border-width: 1.5px;
-  }
-
-  .swipe-toast[data-inline='false'] {
-    width: calc(100vw - 24px);
-    right: 12px;
-    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  }
-}
-
-@media (max-width: 430px) {
-  .mesh-wrap {
-    width: 96vw;
-    max-height: 48svh;
-  }
-
-  .menu-shell {
-    top: max(6px, env(safe-area-inset-top));
-    right: 6px;
-    width: min(190px, calc(100vw - 12px));
-    transform: scale(0.6);
-  }
-
-  .scripts-layout {
-    padding:
-      clamp(94px, 14svh, 112px)
-      8px
-      max(8px, env(safe-area-inset-bottom));
-  }
-
-  .scripts-list {
-    gap: 3px;
-    max-height: calc(100svh - 104px);
-  }
-
-  .script-row {
-    grid-template-columns: 22px minmax(0, 1fr) 46px;
-    column-gap: 6px;
-    max-height: 58px;
-  }
-
-  .script-row__loader {
-    width: 22px;
-    min-width: 22px;
-    transform: scale(0.66);
-  }
-
-  .script-row__image-frame {
-    width: 42px;
-    height: 42px;
-    padding: 1px;
-  }
-
-  .lua-code {
-    font-size: clamp(7px, 2vw, 8.2px);
-    line-height: 1.24;
-  }
-}
-
-@media (max-height: 680px) and (max-width: 760px) {
-  .menu-shell {
-    transform: scale(0.58);
-  }
-
-  .scripts-layout {
-    padding-top: 88px;
-  }
-
-  .scripts-list {
-    max-height: calc(100svh - 96px);
-    gap: 2px;
-  }
-
-  .script-row {
-    max-height: 52px;
-  }
-
-  .script-row__image-frame {
-    width: 40px;
-    height: 40px;
-  }
-
-  .script-row__loader {
-    transform: scale(0.62);
-  }
-
-  .lua-code {
-    font-size: 7px;
-    line-height: 1.2;
+    padding: max(12px, env(safe-area-inset-top))
+      8px max(12px, env(safe-area-inset-bottom));
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-snap-type: y mandatory;
-  }
-
-  .script-preview__image {
-    animation: none;
+  .top-section {
+    scroll-behavior: auto;
   }
 }
